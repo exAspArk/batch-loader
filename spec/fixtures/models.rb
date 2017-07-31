@@ -1,18 +1,18 @@
 class Post
+  attr_accessor :user_id, :user_lazy
+
   def initialize(user_id:)
-    @user_id = user_id
+    self.user_id = user_id
   end
 
-  def user_batch_loader
-    BatchLoader.for(@user_id).batch do |user_ids, batch_loader|
-      User.where(id: user_ids).each do |user|
-        batch_loader.load(user.id, user)
-      end
+  def user_lazy(cache: true)
+    BatchLoader.for(user_id).batch(cache: cache) do |user_ids, batch_loader|
+      User.where(id: user_ids).each { |user| batch_loader.load(user.id, user) }
     end
   end
 
   def user
-    user_batch_loader.sync
+    user_lazy.sync
   end
 end
 
