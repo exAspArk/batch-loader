@@ -6,10 +6,9 @@ class BatchLoader
 
     def call(env)
       begin
-        BatchLoader::Executor.ensure_current
         @app.call(env)
       ensure
-        BatchLoader::Executor.delete_current
+        BatchLoader::Executor.clear_current
       end
     end
   end

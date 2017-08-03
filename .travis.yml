@@ -2,4 +2,6 @@ sudo: false
 language: ruby
 rvm:
   - 2.3.4
+env:
+  - CI=true
 before_install: gem install bundler -v 1.15.3

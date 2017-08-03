@@ -1,6 +1,10 @@
 # BatchLoader
 
 [![Build Status](https://travis-ci.org/exAspArk/batch-loader.svg?branch=master)](https://travis-ci.org/exAspArk/batch-loader)
+[![Coverage Status](https://coveralls.io/repos/github/exAspArk/batch-loader/badge.svg)](https://coveralls.io/github/exAspArk/batch-loader)
+[![Code Climate](https://img.shields.io/codeclimate/github/exAspArk/batch-loader.svg)](https://codeclimate.com/github/exAspArk/batch-loader)
+[![Downloads](https://img.shields.io/gem/dt/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
+[![Latest Version](https://img.shields.io/gem/v/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 
 Simple tool to avoid N+1 DB queries, HTTP requests, etc.
 
@@ -16,7 +20,6 @@ Simple tool to avoid N+1 DB queries, HTTP requests, etc.
   * [Caching](#caching)
 * [Installation](#installation)
 * [Implementation details](#implementation-details)
-* [Testing](#testing)
 * [Development](#development)
 * [Contributing](#contributing)
 * [License](#license)
@@ -96,7 +99,7 @@ users = load_posts(post.user)  #   ↓    U    ↓
 users.map { |u| user.name }    #      Users
 ```
 
-But the problem here is that `load_posts` now depends on the child association. Plus it'll preload the association every time, even if it's not necessary. Can we do better? Sure!
+But the problem here is that `load_posts` now depends on the child association and knows that it has to preload the data for `load_users`. And it'll do it every time, even if it's not necessary. Can we do better? Sure!
 
 ### Basic example
 
@@ -130,7 +133,7 @@ As we can see, batching is isolated and described right in a place where it's ne
 
 ### How it works
 
-In general, `BatchLoader` returns an object which in other similar implementations is call Promise. Each Promise knows which data it needs to load and how to batch the query. When all the Promises are collected it's possible to resolve them once without N+1 queries.
+In general, `BatchLoader` returns a lazy object. In other programming languages it usually called Promise, but I personally prefer to call it lazy, since Ruby already uses the name in standard library :) Each lazy object knows which data it needs to load and how to batch the query. When all the lazy objects are collected it's possible to resolve them once without N+1 queries.
 
 So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be batched. For the `batch` method, we pass a block which uses all the collected items (`user_ids`):
 
@@ -172,7 +175,7 @@ end
 class PostsController < ApplicationController
   def index
     posts = Post.limit(10)
-    serialized_posts = posts.map { |post| {id: post.id, rating: post.rating} }
+    serialized_posts = posts.map { |post| {id: post.id, rating: post.rating} } # N+1 HTTP requests for each post.rating
 
     render json: serialized_posts
   end
@@ -182,7 +185,6 @@ end
 As we can see, the code above will make N+1 HTTP requests, one for each post. Let's batch the requests with a gem called [parallel](https://github.com/grosser/parallel):
 
 ```ruby
-# app/models/post.rb
 class Post < ApplicationRecord
   def rating_lazy
     BatchLoader.for(post).batch do |posts, batch_loader|
@@ -190,9 +192,7 @@ class Post < ApplicationRecord
     end
   end
 
-  def rating
-    HttpClient.request(:get, "https://example.com/ratings/#{id}")
-  end
+  # ...
 end
 ```
 
@@ -201,7 +201,6 @@ end
 Now we can resolve all `BatchLoader` objects in the controller:
 
 ```ruby
-# app/controllers/posts_controller.rb
 class PostsController < ApplicationController
   def index
     posts = Post.limit(10)
@@ -211,10 +210,9 @@ class PostsController < ApplicationController
 end
 ```
 
-`BatchLoader` caches the resolved values. To ensure that the cache is purged for each request in the app add the following middleware:
+`BatchLoader` caches the resolved values. To ensure that the cache is purged between requests in the app add the following middleware to your `config/application.rb`:
 
 ```ruby
-# config/application.rb
 config.middleware.use BatchLoader::Middleware
 ```
 
@@ -222,11 +220,120 @@ See the [Caching](#caching) section for more information.
 
 ### GraphQL example
 
-TODO
+With GraphQL using batching is particularly useful. You can't use usual techniques such as preloading associations in advance to avoid N+1 queries.
+Since you don't know which fields user is going to ask in a query.
+
+Let's take a look at the simple [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) schema example:
+
+```ruby
+Schema = GraphQL::Schema.define do
+  query QueryType
+end
+
+QueryType = GraphQL::ObjectType.define do
+  name "Query"
+  field :posts, !types[PostType], resolve: ->(obj, args, ctx) { Post.all }
+end
+
+PostType = GraphQL::ObjectType.define do
+  name "Post"
+  field :user, !UserType, resolve: ->(post, args, ctx) { post.user } # N+1 queries
+end
+
+UserType = GraphQL::ObjectType.define do
+  name "User"
+  field :name, !types.String
+end
+```
+
+If we want to execute a simple query like:
+
+```ruby
+query = "
+{
+  posts {
+    user {
+      name
+    }
+  }
+}
+"
+Schema.execute(query, variables: {}, context: {})
+```
+
+We will get N+1 queries for each `post.user`. To avoid this problem, all we have to do is to change the resolver to use `BatchLoader`:
+
+```ruby
+PostType = GraphQL::ObjectType.define do
+  name "Post"
+  field :user, !UserType, resolve: ->(post, args, ctx) do
+    BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
+      User.where(id: user_ids).each { |user| batch_loader.load(user.id, user) }
+    end
+  end
+end
+```
+
+And setup GraphQL with built-in `lazy_resolve` method:
+
+```ruby
+Schema = GraphQL::Schema.define do
+  query QueryType
+  lazy_resolve BatchLoader, :sync
+end
+```
 
 ### Caching
 
-TODO
+By default `BatchLoader` caches the resolved values. You can test it by running something like:
+
+```ruby
+def user_lazy(id)
+  BatchLoader.for(id).batch do |ids, batch_loader|
+    User.where(id: ids).each { |user| batch_loader.load(user.id, user) }
+  end
+end
+
+user_lazy(1)      # no request
+# => <#BatchLoader>
+
+user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+# => <#User>
+
+user_lazy(1).sync # no request
+# => <#User>
+```
+
+To drop the cache manually you can run:
+
+```ruby
+user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+user_lazy(1).sync # no request
+
+BatchLoader::Executor.clear_current
+
+user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+```
+
+Usually, it's just enough to clear the cache between HTTP requests in the app. To do so, simply add the middleware:
+
+```ruby
+# calls "BatchLoader::Executor.clear_current" after each request
+use BatchLoader::Middleware
+```
+
+In some rare cases it's useful to disable caching for `BatchLoader`. For example, in tests or after data mutations:
+
+```ruby
+def user_lazy(id)
+  BatchLoader.for(id).batch(cache: false) do |ids, batch_loader|
+    # ...
+  end
+end
+
+user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+```
 
 ## Installation
 
@@ -246,11 +353,7 @@ Or install it yourself as:
 
 ## Implementation details
 
-TODO
-
-## Testing
-
-TODO
+Coming soon
 
 ## Development
 

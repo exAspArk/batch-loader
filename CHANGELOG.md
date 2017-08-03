@@ -16,7 +16,7 @@ that you can set version constraints properly.
 
 * `Added`: `cache: false` option.
 * `Added`: `BatchLoader::Middleware`.
-* `Added`: More docs and tests.
+* `Added`: more docs and tests.
 
 #### [v0.1.0](https://github.com/exAspArk/batch-loader/compare/ed32edb...v0.1.0) – 2017-07-31
 

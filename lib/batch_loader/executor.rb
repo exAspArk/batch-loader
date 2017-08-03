@@ -6,7 +6,11 @@ class BatchLoader
       Thread.current[NAMESPACE] ||= new
     end
 
-    def self.delete_current
+    def self.current
+      Thread.current[NAMESPACE]
+    end
+
+    def self.clear_current
       Thread.current[NAMESPACE] = nil
     end
 

@@ -1,10 +1,8 @@
 require "spec_helper"
 
 RSpec.describe BatchLoader do
-  after { BatchLoader::Executor.delete_current }
-
   describe '.sync!' do
-    it "does something useful" do
+    it "syncs all BatchLoaders" do
       user1 = User.save(id: 1)
       post1 = Post.new(user_id: user1.id)
       user2 = User.save(id: 2)
@@ -26,7 +24,7 @@ RSpec.describe BatchLoader do
       }.to raise_error(BatchLoader::NoBatchError, "Please provide a batch block first")
     end
 
-    it 'caches the result between different BatchLoader instances' do
+    it 'caches the result even between different BatchLoader instances' do
       user = User.save(id: 1)
       post = Post.new(user_id: user.id)
 

@@ -6,22 +6,20 @@ class BatchLoader
   NoBatchError = Class.new(StandardError)
   BatchAlreadyExistsError = Class.new(StandardError)
 
-  class << self
-    def for(item)
-      new(item: item)
-    end
+  def self.for(item)
+    new(item: item)
+  end
 
-    def sync!(value)
-      case value
-      when Array
-        value.map! { |v| sync!(v) }
-      when Hash
-        value.each { |k, v| value[k] = sync!(v) }
-      when BatchLoader
-        sync!(value.sync)
-      else
-        value
-      end
+  def self.sync!(value)
+    case value
+    when Array
+      value.map! { |v| sync!(v) }
+    when Hash
+      value.each { |k, v| value[k] = sync!(v) }
+    when BatchLoader
+      sync!(value.sync)
+    else
+      value
     end
   end
 

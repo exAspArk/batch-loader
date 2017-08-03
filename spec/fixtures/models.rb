@@ -1,6 +1,15 @@
 class Post
   attr_accessor :user_id, :user_lazy
 
+  def self.save(user_id:)
+    @@posts ||= []
+    @@posts << new(user_id: user_id)
+  end
+
+  def self.all
+    @@posts
+  end
+
   def initialize(user_id:)
     self.user_id = user_id
   end
