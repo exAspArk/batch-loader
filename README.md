@@ -22,6 +22,7 @@ Simple tool to avoid N+1 DB queries, HTTP requests, etc.
 * [Implementation details](#implementation-details)
 * [Development](#development)
 * [Contributing](#contributing)
+* [Alternatives](#alternatives)
 * [License](#license)
 * [Code of Conduct](#code-of-conduct)
 
@@ -31,7 +32,7 @@ Simple tool to avoid N+1 DB queries, HTTP requests, etc.
 * Adapted Ruby implementation of battle-tested tools like [Haskell Haxl](https://github.com/facebook/Haxl), [JS DataLoader](https://github.com/facebook/dataloader), etc.
 * Parent objects don't have to know about children's requirements, batching is isolated.
 * Automatically caches previous queries.
-* Doesn't require to create custom classes.
+* Doesn't require to create new abstractions and custom classes.
 * Thread-safe (`BatchLoader#load`).
 * Has no dependencies, no monkey-patches.
 * Works with any Ruby code, including REST APIs and GraphQL.
@@ -356,6 +357,23 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/exAspArk/batch-loader. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+
+## Alternatives
+
+There are some other Ruby implementations for batching such as:
+
+* [shopify/graphql-batch](https://github.com/shopify/graphql-batch)
+* [sheerun/dataloader](https://github.com/sheerun/dataloader)
+
+However, `batch-loader` has some differences:
+
+* It is implemented for general usage and can be used not only with GraphQL. In fact, we use it for RESTful APIs on production as well.
+* It doesn't try to mimic implementations in other programming languages which have an asynchronous nature. So, it doesn't load extra dependencies to bring such primitives as Promise, which are not very popular in Ruby community.
+Instead, it uses the idea of lazy objects, which are included in [Ruby standard library](https://ruby-doc.org/core-2.4.1/Enumerable.html#method-i-lazy). These lazy objects allow one to manipulate with objects and then resolve them at the end
+when it's necessary.
+* It doesn't force you to create new abstractions and classes for each batching, just pass a block to `batch` method.
+* It doesn't require to return an array of the loaded objects in the same order as the passed items. I find it difficult to satisfy these constraints: to sort the loaded objects, add `nil` values for the missing ones, etc. Instead, it provides a `load` method which simply maps an item to the loaded object.
+* It doesn't depend on any other external dependencies. For example, no need to load huge external libraries for thread-safety, the gem is thread-safe out of the box.
 
 ## License
 
