@@ -33,7 +33,7 @@ Simple tool to avoid N+1 DB queries, HTTP requests, etc.
 * Automatically caches previous queries.
 * Doesn't require to create custom classes.
 * Thread-safe (`BatchLoader#load`).
-* Has zero dependencies.
+* Has no dependencies, no monkey-patches.
 * Works with any Ruby code, including REST APIs and GraphQL.
 
 ## Usage
@@ -47,19 +47,15 @@ def load_posts(ids)
   Post.where(id: ids)
 end
 
-def load_users(posts)
-  posts.map { |post| post.user }
-end
-
 posts = load_posts([1, 2, 3])  #      Posts      SELECT * FROM posts WHERE id IN (1, 2, 3)
                                #      _ ↓ _
                                #    ↙   ↓   ↘
-                               #   U    ↓    ↓   SELECT * FROM users WHERE id = 1
-users = load_users(post)       #   ↓    U    ↓   SELECT * FROM users WHERE id = 2
-                               #   ↓    ↓    U   SELECT * FROM users WHERE id = 3
+users = posts.map do |post|    #   U    ↓    ↓   SELECT * FROM users WHERE id = 1
+  post.user                    #   ↓    U    ↓   SELECT * FROM users WHERE id = 2
+end                            #   ↓    ↓    U   SELECT * FROM users WHERE id = 3
                                #    ↘   ↓   ↙
                                #      ¯ ↓ ¯
-users.map { |u| user.name }    #      Users
+puts users                     #      Users
 ```
 
 The naive approach would be to preload dependent objects on the top level:
@@ -84,22 +80,18 @@ def load_posts(ids)
   posts.each { |post| post.user = user_by_id[post.user_id] }
 end
 
-def load_users(posts)
-  posts.map { |post| post.user }
-end
-
 posts = load_posts([1, 2, 3])  #      Posts      SELECT * FROM posts WHERE id IN (1, 2, 3)
                                #      _ ↓ _      SELECT * FROM users WHERE id IN (1, 2, 3)
                                #    ↙   ↓   ↘
-                               #   U    ↓    ↓
-users = load_posts(post.user)  #   ↓    U    ↓
-                               #   ↓    ↓    U
+users = posts.map do |post|    #   U    ↓    ↓
+  post.user                    #   ↓    U    ↓
+end                            #   ↓    ↓    U
                                #    ↘   ↓   ↙
                                #      ¯ ↓ ¯
-users.map { |u| user.name }    #      Users
+puts users                     #      Users
 ```
 
-But the problem here is that `load_posts` now depends on the child association and knows that it has to preload the data for `load_users`. And it'll do it every time, even if it's not necessary. Can we do better? Sure!
+But the problem here is that `load_posts` now depends on the child association and knows that it has to preload data for future use. And it'll do it every time, even if it's not necessary. Can we do better? Sure!
 
 ### Basic example
 
@@ -110,32 +102,30 @@ def load_posts(ids)
   Post.where(id: ids)
 end
 
-def load_users(posts)
-  posts.map do |post|
-    BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
-      User.where(id: user_ids).each { |u| batch_loader.load(u.id, user) }
-    end
+def load_user(post)
+  BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
+    User.where(id: user_ids).each { |u| batch_loader.load(u.id, user) }
   end
 end
 
-posts = load_posts([1, 2, 3])         #      Posts      SELECT * FROM posts WHERE id IN (1, 2, 3)
-                                      #      _ ↓ _
-                                      #    ↙   ↓   ↘
-                                      #   BL   ↓    ↓
-users = load_users(posts)             #   ↓    BL   ↓
-                                      #   ↓    ↓    BL
-                                      #    ↘   ↓   ↙
-                                      #      ¯ ↓ ¯
-BatchLoader.sync!(users).map(&:name)  #      Users      SELECT * FROM users WHERE id IN (1, 2, 3)
+posts = load_posts([1, 2, 3])  #      Posts      SELECT * FROM posts WHERE id IN (1, 2, 3)
+                               #      _ ↓ _
+                               #    ↙   ↓   ↘
+users = posts.map do |post|    #   BL   ↓    ↓
+  load_user(post)              #   ↓    BL   ↓
+end                            #   ↓    ↓    BL
+                               #    ↘   ↓   ↙
+                               #      ¯ ↓ ¯
+puts BatchLoader.sync!(users)  #      Users      SELECT * FROM users WHERE id IN (1, 2, 3)
 ```
 
 As we can see, batching is isolated and described right in a place where it's needed.
 
 ### How it works
 
-In general, `BatchLoader` returns a lazy object. In other programming languages it usually called Promise, but I personally prefer to call it lazy, since Ruby already uses the name in standard library :) Each lazy object knows which data it needs to load and how to batch the query. When all the lazy objects are collected it's possible to resolve them once without N+1 queries.
+In general, `BatchLoader` returns a lazy object. In other programming languages it is usually called Promise, but I personally prefer to call it lazy, since Ruby doesn't have an asynchronous nature and `lazy` is used in the standard library :) Each lazy object knows which data it needs to load and how to batch the query. When all the lazy objects are collected it's possible to resolve them once without N+1 queries.
 
-So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be batched. For the `batch` method, we pass a block which uses all the collected items (`user_ids`):
+So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be batched. For the `batch` method, we pass a block which will use all the collected items (`user_ids`):
 
 <pre>
 BatchLoader.for(post.<b>user_id</b>).batch do |<b>user_ids</b>, batch_loader|
@@ -147,7 +137,7 @@ Inside the block we execute a batch query for our items (`User.where`). After th
 
 <pre>
 BatchLoader.for(post.<b>user_id</b>).batch do |user_ids, batch_loader|
-  User.where(id: user_ids).each { |u| batch_loader.load(<b>u.id</b>, <b>user</b>) }
+  User.where(id: user_ids).each { |user| batch_loader.load(<b>user.id</b>, <b>user</b>) }
 end
 </pre>
 
@@ -205,6 +195,7 @@ class PostsController < ApplicationController
   def index
     posts = Post.limit(10)
     serialized_posts = posts.map { |post| {id: post.id, rating: post.rating_lazy} }
+
     render json: BatchLoader.sync!(serialized_posts)
   end
 end
@@ -283,6 +274,8 @@ Schema = GraphQL::Schema.define do
 end
 ```
 
+That's it.
+
 ### Caching
 
 By default `BatchLoader` caches the resolved values. You can test it by running something like:
@@ -295,13 +288,13 @@ def user_lazy(id)
 end
 
 user_lazy(1)      # no request
-# => <#BatchLoader>
+# => <#BatchLoader:...>
 
 user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
-# => <#User>
+# => <#User:...>
 
 user_lazy(1).sync # no request
-# => <#User>
+# => <#User:...>
 ```
 
 To drop the cache manually you can run:
@@ -318,8 +311,7 @@ user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
 Usually, it's just enough to clear the cache between HTTP requests in the app. To do so, simply add the middleware:
 
 ```ruby
-# calls "BatchLoader::Executor.clear_current" after each request
-use BatchLoader::Middleware
+use BatchLoader::Middleware # calls "BatchLoader::Executor.clear_current" after each request
 ```
 
 In some rare cases it's useful to disable caching for `BatchLoader`. For example, in tests or after data mutations:
