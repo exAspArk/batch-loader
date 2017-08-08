@@ -6,7 +6,7 @@
 [![Downloads](https://img.shields.io/gem/dt/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 [![Latest Version](https://img.shields.io/gem/v/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 
-Simple tool to avoid N+1 DB queries, HTTP requests, etc.
+This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, etc.
 
 ## Contents
 
@@ -30,12 +30,11 @@ Simple tool to avoid N+1 DB queries, HTTP requests, etc.
 
 * Generic utility to avoid N+1 DB queries, HTTP requests, etc.
 * Adapted Ruby implementation of battle-tested tools like [Haskell Haxl](https://github.com/facebook/Haxl), [JS DataLoader](https://github.com/facebook/dataloader), etc.
-* Parent objects don't have to know about children's requirements, batching is isolated.
+* Batching is isolated, load data in batch where and when it's needed.
 * Automatically caches previous queries.
-* Doesn't require to create new abstractions and custom classes.
 * Thread-safe (`BatchLoader#load`).
-* Has no dependencies, no monkey-patches.
-* Works with any Ruby code, including REST APIs and GraphQL.
+* No need to share data through instance variables or custom defined classes.
+* No dependencies, no monkey-patches, no extra primitives such as Promise, about 150 LOC.
 
 ## Usage
 
@@ -346,7 +345,7 @@ Or install it yourself as:
 
 ## Implementation details
 
-Coming soon
+See the [slides](https://speakerdeck.com/exaspark/batching-the-powerful-way-to-solve-n-plus-1-queries-every-rubyist-should-know).
 
 ## Development
 
@@ -371,7 +370,7 @@ However, `batch-loader` has some differences:
 * It doesn't try to mimic implementations in other programming languages which have an asynchronous nature. So, it doesn't load extra dependencies to bring such primitives as Promise, which are not very popular in Ruby community.
 Instead, it uses the idea of lazy objects, which are included in [Ruby standard library](https://ruby-doc.org/core-2.4.1/Enumerable.html#method-i-lazy). These lazy objects allow one to manipulate with objects and then resolve them at the end
 when it's necessary.
-* It doesn't force you to create new abstractions and classes for each batching, just pass a block to `batch` method.
+* It doesn't force you to share batching through instance variables or custom defined classes, just pass a block to `batch` method.
 * It doesn't require to return an array of the loaded objects in the same order as the passed items. I find it difficult to satisfy these constraints: to sort the loaded objects, add `nil` values for the missing ones, etc. Instead, it provides a `load` method which simply maps an item to the loaded object.
 * It doesn't depend on any other external dependencies. For example, no need to load huge external libraries for thread-safety, the gem is thread-safe out of the box.
 

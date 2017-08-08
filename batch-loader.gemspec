@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["exAspArk"]
   spec.email         = ["exaspark@gmail.com"]
 
-  spec.summary       = %q{Simple tool to avoid N+1 DB queries, HTTP requests, etc.}
-  spec.description   = %q{Simple tool to avoid N+1 DB queries, HTTP requests, etc.}
+  spec.summary       = %q{Powerful tool to avoid N+1 DB or HTTP queries}
+  spec.description   = %q{Powerful tool to avoid N+1 DB or HTTP queries}
   spec.homepage      = "https://github.com/exAspArk/batch-loader"
   spec.license       = "MIT"
 

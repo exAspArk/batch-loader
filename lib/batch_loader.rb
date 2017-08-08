@@ -33,35 +33,36 @@ class BatchLoader
     raise BatchAlreadyExistsError if @batch_block
     @cache = cache
     @batch_block = batch_block
-    executor_for_block.add(item: item)
+    executor_proxy.add(item: item)
     self
   end
 
   def load(item, value)
-    executor_for_block.load(item: item, value: value)
+    executor_proxy.load(item: item, value: value)
   end
 
   def sync
-    unless executor_for_block.value_loaded?(item: item)
-      batch_block.call(executor_for_block.list_items, self)
-      executor_for_block.delete_items
+    unless executor_proxy.value_loaded?(item: item)
+      batch_block.call(executor_proxy.list_items, self)
+      executor_proxy.delete_items
     end
-    result = executor_for_block.loaded_value(item: item)
+    result = executor_proxy.loaded_value(item: item)
     purge_cache unless cache
     result
   end
 
   private
 
-  def executor_for_block
-    @executor_for_block ||= begin
+  def executor_proxy
+    @executor_proxy ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless batch_block
       BatchLoader::ExecutorProxy.new(&batch_block)
     end
   end
 
   def purge_cache
-    executor_for_block.unload_value(item: item)
-    executor_for_block.add(item: item)
+    executor_proxy.unload_value(item: item)
+    executor_proxy.add(item: item)
   end
 end
+
