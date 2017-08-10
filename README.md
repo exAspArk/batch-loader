@@ -26,6 +26,10 @@ This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, et
 * [License](#license)
 * [Code of Conduct](#code-of-conduct)
 
+<a href="https://www.universe.com/" target="_blank" rel="noopener noreferrer">
+  <img src="images/universe.png" height="41" width="153" alt="Sponsored by Universe" style="max-width:100%;">
+</a>
+
 ## Highlights
 
 * Generic utility to avoid N+1 DB queries, HTTP requests, etc.
