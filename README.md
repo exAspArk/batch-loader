@@ -15,7 +15,7 @@ This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, et
   * [Why?](#why)
   * [Basic example](#basic-example)
   * [How it works](#how-it-works)
-  * [REST API example](#rest-api-example)
+  * [RESTful API example](#restful-api-example)
   * [GraphQL example](#graphql-example)
   * [Caching](#caching)
 * [Installation](#installation)
@@ -37,8 +37,8 @@ This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, et
 * Batching is isolated, load data in batch where and when it's needed.
 * Automatically caches previous queries.
 * Thread-safe (`BatchLoader#load`).
-* No need to share data through instance variables or custom defined classes.
-* No dependencies, no monkey-patches, no extra primitives such as Promise, about 150 LOC.
+* No need to share data through variables or custom defined classes.
+* No dependencies, no monkey-patches, no extra primitives such as Promises, just 150 LOC.
 
 ## Usage
 
@@ -108,7 +108,7 @@ end
 
 def load_user(post)
   BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
-    User.where(id: user_ids).each { |u| batch_loader.load(u.id, user) }
+    User.where(id: user_ids).each { |u| batch_loader.load(u.id, u) }
   end
 end
 
@@ -127,9 +127,9 @@ As we can see, batching is isolated and described right in a place where it's ne
 
 ### How it works
 
-In general, `BatchLoader` returns a lazy object. In other programming languages it is usually called Promise, but I personally prefer to call it lazy, since Ruby doesn't have an asynchronous nature and `lazy` is used in the standard library :) Each lazy object knows which data it needs to load and how to batch the query. When all the lazy objects are collected it's possible to resolve them once without N+1 queries.
+In general, `BatchLoader` returns a lazy object (Ruby also uses `lazy` in [the standard library](https://ruby-doc.org/core-2.4.1/Enumerator/Lazy.html)). Each lazy object knows which data it needs to load and how to batch the query. When all the lazy objects are collected it's possible to resolve them once without N+1 queries.
 
-So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be batched. For the `batch` method, we pass a block which will use all the collected items (`user_ids`):
+So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be collected and used for batching later. For the `batch` method, we pass a block which will use all the collected items (`user_ids`):
 
 <pre>
 BatchLoader.for(post.<b>user_id</b>).batch do |<b>user_ids</b>, batch_loader|
@@ -153,7 +153,7 @@ BatchLoader.sync!(users) # => SELECT * FROM users WHERE id IN (1, 2, 3)
 
 For more information, see the [Implementation details](#implementation-details) section.
 
-### REST API example
+### RESTful API example
 
 Now imagine we have a regular Rails app with N+1 HTTP requests:
 
@@ -215,8 +215,7 @@ See the [Caching](#caching) section for more information.
 
 ### GraphQL example
 
-With GraphQL using batching is particularly useful. You can't use usual techniques such as preloading associations in advance to avoid N+1 queries.
-Since you don't know which fields user is going to ask in a query.
+Batching is particularly useful with GraphQL. Using such techniques as preloading data in advance to avoid N+1 queries can be very complicated, since a user can ask for any available fields in a query.
 
 Let's take a look at the simple [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) schema example:
 
@@ -241,7 +240,7 @@ UserType = GraphQL::ObjectType.define do
 end
 ```
 
-If we want to execute a simple query like:
+If we want to execute a simple query like the following, we will get N+1 queries for each `post.user`:
 
 ```ruby
 query = "
@@ -256,7 +255,7 @@ query = "
 Schema.execute(query, variables: {}, context: {})
 ```
 
-We will get N+1 queries for each `post.user`. To avoid this problem, all we have to do is to change the resolver to use `BatchLoader`:
+To avoid this problem, all we have to do is to change the resolver to use `BatchLoader`:
 
 ```ruby
 PostType = GraphQL::ObjectType.define do
@@ -269,7 +268,7 @@ PostType = GraphQL::ObjectType.define do
 end
 ```
 
-And setup GraphQL with built-in `lazy_resolve` method:
+And setup GraphQL with the built-in `lazy_resolve` method:
 
 ```ruby
 Schema = GraphQL::Schema.define do
@@ -349,7 +348,7 @@ Or install it yourself as:
 
 ## Implementation details
 
-See the [slides](https://speakerdeck.com/exaspark/batching-the-powerful-way-to-solve-n-plus-1-queries-every-rubyist-should-know).
+See the [slides](https://speakerdeck.com/exaspark/batching-a-powerful-way-to-solve-n-plus-1-queries) [37-42].
 
 ## Development
 
@@ -371,10 +370,10 @@ There are some other Ruby implementations for batching such as:
 However, `batch-loader` has some differences:
 
 * It is implemented for general usage and can be used not only with GraphQL. In fact, we use it for RESTful APIs on production as well.
-* It doesn't try to mimic implementations in other programming languages which have an asynchronous nature. So, it doesn't load extra dependencies to bring such primitives as Promise, which are not very popular in Ruby community.
-Instead, it uses the idea of lazy objects, which are included in [Ruby standard library](https://ruby-doc.org/core-2.4.1/Enumerable.html#method-i-lazy). These lazy objects allow one to manipulate with objects and then resolve them at the end
+* It doesn't try to mimic implementations in other programming languages which have an asynchronous nature. So, it doesn't load extra dependencies to bring such primitives as Promises, which are not very popular in Ruby community.
+Instead, it uses the idea of lazy objects, which are included in the [Ruby standard library](https://ruby-doc.org/core-2.4.1/Enumerable.html#method-i-lazy). These lazy objects allow one to manipulate with objects and then resolve them at the end
 when it's necessary.
-* It doesn't force you to share batching through instance variables or custom defined classes, just pass a block to `batch` method.
+* It doesn't force you to share batching through variables or custom defined classes, just pass a block to `batch` method.
 * It doesn't require to return an array of the loaded objects in the same order as the passed items. I find it difficult to satisfy these constraints: to sort the loaded objects, add `nil` values for the missing ones, etc. Instead, it provides a `load` method which simply maps an item to the loaded object.
 * It doesn't depend on any other external dependencies. For example, no need to load huge external libraries for thread-safety, the gem is thread-safe out of the box.
 
