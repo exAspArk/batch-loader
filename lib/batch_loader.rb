@@ -6,24 +6,23 @@ class BatchLoader
   NoBatchError = Class.new(StandardError)
   BatchAlreadyExistsError = Class.new(StandardError)
 
-  def self.for(item)
-    new(item: item)
-  end
+  NOT_REPLACABLE_METHOD_NAMES = [:singleton_method_added]
+  OVERRIDDEN_OBJECT_METHOD_NAMES = [:respond_to?]
 
-  def self.sync!(value)
-    case value
-    when Array
-      value.map! { |v| sync!(v) }
-    when Hash
-      value.each { |k, v| value[k] = sync!(v) }
-    when BatchLoader
-      sync!(value.sync)
-    else
-      value
+  class << self
+    def for(item)
+      new(item: item)
+    end
+
+    private
+
+    def without_warnings(&block)
+      warning_level = $VERBOSE
+      $VERBOSE = nil
+      block.call
+      $VERBOSE = warning_level
     end
   end
-
-  attr_reader :item, :batch_block, :cache
 
   def initialize(item:)
     @item = item
@@ -31,9 +30,11 @@ class BatchLoader
 
   def batch(cache: true, &batch_block)
     raise BatchAlreadyExistsError if @batch_block
+
     @cache = cache
     @batch_block = batch_block
-    executor_proxy.add(item: item)
+    executor_proxy.add(item: @item)
+
     self
   end
 
@@ -41,28 +42,67 @@ class BatchLoader
     executor_proxy.load(item: item, value: value)
   end
 
-  def sync
-    unless executor_proxy.value_loaded?(item: item)
-      batch_block.call(executor_proxy.list_items, self)
-      executor_proxy.delete_items
-    end
-    result = executor_proxy.loaded_value(item: item)
-    purge_cache unless cache
-    result
+  def batch_loader?
+    true
+  end
+
+  def respond_to?(method_name)
+    method_name == :batch_loader? || method_missing(:respond_to?, method_name)
   end
 
   private
 
-  def executor_proxy
-    @executor_proxy ||= begin
-      raise NoBatchError.new("Please provide a batch block first") unless batch_block
-      BatchLoader::ExecutorProxy.new(&batch_block)
+  def method_missing(method_name, *args, &block)
+    sync!.public_send(method_name, *args, &block)
+  end
+
+  def sync!
+    return self if @synced
+
+    ensure_batched
+    loaded_value = executor_proxy.loaded_value(item: @item)
+
+    if @cache
+      replace_with!(loaded_value)
+      @synced = true
+      self
+    else
+      purge_cache
+      loaded_value
+    end
+  end
+
+  def ensure_batched
+    return if executor_proxy.value_loaded?(item: @item)
+    @batch_block.call(executor_proxy.list_items, self)
+    executor_proxy.delete_items
+  end
+
+  def replace_with!(value)
+    BatchLoader.send(:without_warnings) do
+      (value.methods - NOT_REPLACABLE_METHOD_NAMES).each do |method_name|
+        (class << self; self; end).class_eval do
+          define_method(method_name) do |*args, &block|
+            value.public_send(method_name, *args, &block)
+          end
+        end
+      end
     end
   end
 
   def purge_cache
-    executor_proxy.unload_value(item: item)
-    executor_proxy.add(item: item)
+    executor_proxy.unload_value(item: @item)
+    executor_proxy.add(item: @item)
+  end
+
+  def executor_proxy
+    @executor_proxy ||= begin
+      raise NoBatchError.new("Please provide a batch block first") unless @batch_block
+      BatchLoader::ExecutorProxy.new(&@batch_block)
+    end
+  end
+
+  without_warnings do
+    (Object.instance_methods - OVERRIDDEN_OBJECT_METHOD_NAMES).each { |method_name| undef_method(method_name) }
   end
 end
-

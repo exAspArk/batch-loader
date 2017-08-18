@@ -1,8 +1,13 @@
 require "spec_helper"
 
 RSpec.describe BatchLoader do
-  describe '.sync!' do
-    it "syncs all BatchLoaders" do
+  after do
+    User.destroy_all
+    Post.destroy_all
+  end
+
+  context 'lazily' do
+    it "syncs all BatchLoaders by returning the loaded value" do
       user1 = User.save(id: 1)
       post1 = Post.new(user_id: user1.id)
       user2 = User.save(id: 2)
@@ -11,16 +16,12 @@ RSpec.describe BatchLoader do
 
       expect(User).to receive(:where).with(id: [1, 2]).once.and_call_original
 
-      BatchLoader.sync!(result)
-
       expect(result).to eq(user1: user1, user2: user2)
     end
-  end
 
-  describe '#sync' do
     it 'raises an error if batch was not provided' do
       expect {
-        BatchLoader.for(1).sync
+        BatchLoader.for(1).id
       }.to raise_error(BatchLoader::NoBatchError, "Please provide a batch block first")
     end
 
@@ -30,8 +31,8 @@ RSpec.describe BatchLoader do
 
       expect(User).to receive(:where).with(id: [1]).once.and_call_original
 
-      expect(post.user_lazy.sync).to eq(user)
-      expect(post.user_lazy.sync).to eq(user)
+      expect(post.user_lazy.id).to eq(user.id)
+      expect(post.user_lazy.id).to eq(user.id)
     end
 
     it 'caches the result for the same BatchLoader instance' do
@@ -41,8 +42,17 @@ RSpec.describe BatchLoader do
 
       expect(User).to receive(:where).with(id: [1]).once.and_call_original
 
-      expect(user_lazy.sync).to eq(user)
-      expect(user_lazy.sync).to eq(user)
+      expect(user_lazy).to eq(user)
+      expect(user_lazy).to eq(user)
+    end
+
+    it 'works even if the loaded values is nil' do
+      post = Post.new(user_id: 1)
+      user_lazy = post.user_lazy
+
+      expect(User).to receive(:where).with(id: [1]).once.and_call_original
+
+      expect(user_lazy).to eq(nil)
     end
   end
 
@@ -55,7 +65,7 @@ RSpec.describe BatchLoader do
         end
       end
 
-      expect(lazy.sync).to eq(2)
+      expect(lazy).to eq(2)
     end
   end
 
@@ -74,12 +84,12 @@ RSpec.describe BatchLoader do
       post = Post.new(user_id: user1.id)
 
       expect(User).to receive(:where).with(id: [1]).once.and_call_original
-      expect(post.user_lazy.sync).to eq(user1)
+      expect(post.user_lazy).to eq(user1)
 
       post.user_id = user2.id
 
       expect(User).to receive(:where).with(id: [2]).once.and_call_original
-      expect(post.user_lazy(cache: false).sync).to eq(user2)
+      expect(post.user_lazy(cache: false)).to eq(user2)
     end
 
     it 'works without cache for the same BatchLoader instance' do
@@ -89,8 +99,8 @@ RSpec.describe BatchLoader do
 
       expect(User).to receive(:where).with(id: [1]).twice.and_call_original
 
-      expect(user_lazy.sync).to eq(user)
-      expect(user_lazy.sync).to eq(user)
+      expect(user_lazy).to eq(user)
+      expect(user_lazy).to eq(user)
     end
   end
 end

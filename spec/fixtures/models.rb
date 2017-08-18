@@ -1,5 +1,5 @@
 class Post
-  attr_accessor :user_id, :user_lazy
+  attr_accessor :user_id
 
   def self.save(user_id:)
     @@posts ||= []
@@ -8,6 +8,10 @@ class Post
 
   def self.all
     @@posts
+  end
+
+  def self.destroy_all
+    @@posts = []
   end
 
   def initialize(user_id:)
@@ -19,10 +23,6 @@ class Post
       User.where(id: user_ids).each { |user| batch_loader.load(user.id, user) }
     end
   end
-
-  def user
-    user_lazy.sync
-  end
 end
 
 class User
@@ -33,6 +33,10 @@ class User
 
   def self.where(id:)
     @@users.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
+  end
+
+  def self.destroy_all
+    @@users = {}
   end
 
   attr_reader :id

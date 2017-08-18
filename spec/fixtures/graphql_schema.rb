@@ -1,3 +1,5 @@
+require "batch_loader/graphql"
+
 UserType = GraphQL::ObjectType.define do
   name "User"
   field :id, !types.ID
@@ -15,5 +17,5 @@ end
 
 GraphqlSchema = GraphQL::Schema.define do
   query QueryType
-  lazy_resolve BatchLoader, :sync
+  use BatchLoader::GraphQL
 end
