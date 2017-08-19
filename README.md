@@ -38,7 +38,7 @@ This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, et
 * Automatically caches previous queries.
 * Thread-safe (`BatchLoader#load`).
 * No need to share data through variables or custom defined classes.
-* No dependencies, no monkey-patches, no extra primitives such as Promises, just 150 LOC.
+* No dependencies, no monkey-patches, no extra primitives such as Promises, just 200 LOC.
 
 ## Usage
 
@@ -107,8 +107,8 @@ def load_posts(ids)
 end
 
 def load_user(post)
-  BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
-    User.where(id: user_ids).each { |u| batch_loader.load(u.id, u) }
+  BatchLoader.for(post.user_id).batch do |user_ids, loader|
+    User.where(id: user_ids).each { |user| loader.call(user.id, user) }
   end
 end
 
@@ -120,7 +120,7 @@ users = posts.map do |post|    #   BL   ↓    ↓
 end                            #   ↓    ↓    BL
                                #    ↘   ↓   ↙
                                #      ¯ ↓ ¯
-puts BatchLoader.sync!(users)  #      Users      SELECT * FROM users WHERE id IN (1, 2, 3)
+puts users                     #      Users      SELECT * FROM users WHERE id IN (1, 2, 3)
 ```
 
 As we can see, batching is isolated and described right in a place where it's needed.
@@ -132,23 +132,23 @@ In general, `BatchLoader` returns a lazy object (Ruby also uses `lazy` in [the s
 So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be collected and used for batching later. For the `batch` method, we pass a block which will use all the collected items (`user_ids`):
 
 <pre>
-BatchLoader.for(post.<b>user_id</b>).batch do |<b>user_ids</b>, batch_loader|
+BatchLoader.for(post.<b>user_id</b>).batch do |<b>user_ids</b>, loader|
   ...
 end
 </pre>
 
-Inside the block we execute a batch query for our items (`User.where`). After that, all we have to do is to call `load` method and pass an item which was used in `BatchLoader.for` method (`user_id`) and the loaded object itself (`user`):
+Inside the block we execute a batch query for our items (`User.where`). After that, all we have to do is to call `loader` by passing an item which was used in `BatchLoader.for` method (`user_id`) and the loaded object itself (`user`):
 
 <pre>
-BatchLoader.for(post.<b>user_id</b>).batch do |user_ids, batch_loader|
-  User.where(id: user_ids).each { |user| batch_loader.load(<b>user.id</b>, <b>user</b>) }
+BatchLoader.for(post.<b>user_id</b>).batch do |user_ids, loader|
+  User.where(id: user_ids).each { |user| loader.call(<b>user.id</b>, <b>user</b>) }
 end
 </pre>
 
 Now we can resolve all the collected `BatchLoader` objects:
 
 <pre>
-BatchLoader.sync!(users) # => SELECT * FROM users WHERE id IN (1, 2, 3)
+puts users # => SELECT * FROM users WHERE id IN (1, 2, 3)
 </pre>
 
 For more information, see the [Implementation details](#implementation-details) section.
@@ -181,8 +181,8 @@ As we can see, the code above will make N+1 HTTP requests, one for each post. Le
 ```ruby
 class Post < ApplicationRecord
   def rating_lazy
-    BatchLoader.for(post).batch do |posts, batch_loader|
-      Parallel.each(posts, in_threads: 10) { |post| batch_loader.load(post, post.rating) }
+    BatchLoader.for(post).batch do |posts, loader|
+      Parallel.each(posts, in_threads: 10) { |post| loader.call(post, post.rating) }
     end
   end
 
@@ -200,7 +200,7 @@ class PostsController < ApplicationController
     posts = Post.limit(10)
     serialized_posts = posts.map { |post| {id: post.id, rating: post.rating_lazy} }
 
-    render json: BatchLoader.sync!(serialized_posts)
+    render json: serialized_posts
   end
 end
 ```
@@ -261,8 +261,8 @@ To avoid this problem, all we have to do is to change the resolver to use `Batch
 PostType = GraphQL::ObjectType.define do
   name "Post"
   field :user, !UserType, resolve: ->(post, args, ctx) do
-    BatchLoader.for(post.user_id).batch do |user_ids, batch_loader|
-      User.where(id: user_ids).each { |user| batch_loader.load(user.id, user) }
+    BatchLoader.for(post.user_id).batch do |user_ids, loader|
+      User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end
 end
@@ -273,7 +273,7 @@ And setup GraphQL with the built-in `lazy_resolve` method:
 ```ruby
 Schema = GraphQL::Schema.define do
   query QueryType
-  lazy_resolve BatchLoader, :sync
+  use BatchLoader::GraphQL
 end
 ```
 
@@ -285,30 +285,27 @@ By default `BatchLoader` caches the resolved values. You can test it by running 
 
 ```ruby
 def user_lazy(id)
-  BatchLoader.for(id).batch do |ids, batch_loader|
-    User.where(id: ids).each { |user| batch_loader.load(user.id, user) }
+  BatchLoader.for(id).batch do |ids, loader|
+    User.where(id: ids).each { |user| loader.call(user.id, user) }
   end
 end
 
-user_lazy(1)      # no request
-# => <#BatchLoader:...>
-
-user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
 # => <#User:...>
 
-user_lazy(1).sync # no request
+puts user_lazy(1) # no request
 # => <#User:...>
 ```
 
 To drop the cache manually you can run:
 
 ```ruby
-user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
-user_lazy(1).sync # no request
+puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
+puts user_lazy(1) # no request
 
 BatchLoader::Executor.clear_current
 
-user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
 ```
 
 Usually, it's just enough to clear the cache between HTTP requests in the app. To do so, simply add the middleware:
@@ -321,13 +318,13 @@ In some rare cases it's useful to disable caching for `BatchLoader`. For example
 
 ```ruby
 def user_lazy(id)
-  BatchLoader.for(id).batch(cache: false) do |ids, batch_loader|
+  BatchLoader.for(id).batch(cache: false) do |ids, loader|
     # ...
   end
 end
 
-user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
-user_lazy(1).sync # SELECT * FROM users WHERE id IN (1)
+puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
+puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
 ```
 
 ## Installation

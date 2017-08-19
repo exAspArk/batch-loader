@@ -9,19 +9,8 @@ class BatchLoader
   NOT_REPLACABLE_METHOD_NAMES = [:singleton_method_added]
   OVERRIDDEN_OBJECT_METHOD_NAMES = [:respond_to?]
 
-  class << self
-    def for(item)
-      new(item: item)
-    end
-
-    private
-
-    def without_warnings(&block)
-      warning_level = $VERBOSE
-      $VERBOSE = nil
-      block.call
-      $VERBOSE = warning_level
-    end
+  def self.for(item)
+    new(item: item)
   end
 
   def initialize(item:)
@@ -36,10 +25,6 @@ class BatchLoader
     executor_proxy.add(item: @item)
 
     self
-  end
-
-  def load(item, value)
-    executor_proxy.load(item: item, value: value)
   end
 
   def batch_loader?
@@ -74,8 +59,13 @@ class BatchLoader
 
   def ensure_batched
     return if executor_proxy.value_loaded?(item: @item)
-    @batch_block.call(executor_proxy.list_items, self)
+
+    @batch_block.call(executor_proxy.list_items, loader)
     executor_proxy.delete_items
+  end
+
+  def loader
+    ->(item, value) { executor_proxy.load(item: item, value: value) }
   end
 
   def replace_with!(value)
@@ -99,6 +89,17 @@ class BatchLoader
     @executor_proxy ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless @batch_block
       BatchLoader::ExecutorProxy.new(&@batch_block)
+    end
+  end
+
+  class << self
+    private
+
+    def without_warnings(&block)
+      warning_level = $VERBOSE
+      $VERBOSE = nil
+      block.call
+      $VERBOSE = warning_level
     end
   end
 

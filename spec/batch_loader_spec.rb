@@ -54,15 +54,24 @@ RSpec.describe BatchLoader do
 
       expect(user_lazy).to eq(nil)
     end
+
+    it 'raises and error if loaded value do not have a method' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      expect(User).to receive(:where).with(id: [1]).once.and_call_original
+
+      expect { post.user_lazy.foo }.to raise_error(NoMethodError, /undefined method `foo' for #<User/)
+    end
   end
 
   describe '#load' do
     it 'loads the data even in a separate thread' do
-      lazy = BatchLoader.for(1).batch do |nums, batch_loader|
-        nums.each do |num|
-          thread = Thread.new { batch_loader.load(num, num + 1) }
-          thread.join
+      lazy = BatchLoader.for(1).batch do |nums, loader|
+        threads = nums.map do |num|
+          Thread.new { loader.call(num, num + 1) }
         end
+        threads.each(&:join)
       end
 
       expect(lazy).to eq(2)

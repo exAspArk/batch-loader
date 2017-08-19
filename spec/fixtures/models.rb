@@ -19,8 +19,8 @@ class Post
   end
 
   def user_lazy(cache: true)
-    BatchLoader.for(user_id).batch(cache: cache) do |user_ids, batch_loader|
-      User.where(id: user_ids).each { |user| batch_loader.load(user.id, user) }
+    BatchLoader.for(user_id).batch(cache: cache) do |user_ids, loader|
+      User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end
 end
