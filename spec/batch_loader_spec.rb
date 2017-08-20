@@ -38,21 +38,20 @@ RSpec.describe BatchLoader do
     it 'caches the result for the same BatchLoader instance' do
       user = User.save(id: 1)
       post = Post.new(user_id: user.id)
-      user_lazy = post.user_lazy
 
       expect(User).to receive(:where).with(id: [1]).once.and_call_original
 
-      expect(user_lazy).to eq(user)
-      expect(user_lazy).to eq(user)
+      expect(post.user_lazy).to eq(user)
+      expect(post.user_lazy).to eq(user)
     end
 
     it 'works even if the loaded values is nil' do
       post = Post.new(user_id: 1)
-      user_lazy = post.user_lazy
 
       expect(User).to receive(:where).with(id: [1]).once.and_call_original
 
-      expect(user_lazy).to eq(nil)
+      expect(post.user_lazy).to eq(nil)
+      expect(post.user_lazy).to eq(nil)
     end
 
     it 'raises and error if loaded value do not have a method' do
@@ -65,7 +64,7 @@ RSpec.describe BatchLoader do
     end
   end
 
-  describe '#load' do
+  context 'loader' do
     it 'loads the data even in a separate thread' do
       lazy = BatchLoader.for(1).batch do |nums, loader|
         threads = nums.map do |num|

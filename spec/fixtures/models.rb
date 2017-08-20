@@ -1,17 +1,26 @@
 class Post
   attr_accessor :user_id
 
-  def self.save(user_id:)
-    @@posts ||= []
-    @@posts << new(user_id: user_id)
-  end
+  class << self
+    def save(user_id:)
+      ensure_init_store
+      @posts << new(user_id: user_id)
+    end
 
-  def self.all
-    @@posts
-  end
+    def all
+      ensure_init_store
+      @posts
+    end
 
-  def self.destroy_all
-    @@posts = []
+    def destroy_all
+      @posts = []
+    end
+
+    private
+
+    def ensure_init_store
+      @posts ||= []
+    end
   end
 
   def initialize(user_id:)
@@ -26,17 +35,26 @@ class Post
 end
 
 class User
-  def self.save(id:)
-    @@users ||= {}
-    @@users[id] = new(id: id)
-  end
+  class << self
+    def save(id:)
+      ensure_init_store
+      @users[id] = new(id: id)
+    end
 
-  def self.where(id:)
-    @@users.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
-  end
+    def where(id:)
+      ensure_init_store
+      @users.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
+    end
 
-  def self.destroy_all
-    @@users = {}
+    def destroy_all
+      @users = {}
+    end
+
+    private
+
+    def ensure_init_store
+      @users ||= {}
+    end
   end
 
   attr_reader :id

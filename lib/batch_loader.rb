@@ -60,7 +60,10 @@ class BatchLoader
   def ensure_batched
     return if executor_proxy.value_loaded?(item: @item)
 
-    @batch_block.call(executor_proxy.list_items, loader)
+    items = executor_proxy.list_items
+    loader_ = loader
+    items.each { |item| loader_.call(item, nil) }
+    @batch_block.call(items, loader)
     executor_proxy.delete_items
   end
 
