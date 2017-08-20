@@ -78,12 +78,11 @@ RSpec.describe BatchLoader do
   end
 
   describe '#batch' do
-    it 'raises an exception if batch was called twice' do
-      post = Post.new(user_id: 1)
+    it 'delegates the second batch call to the loaded value' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
 
-      expect {
-        post.user_lazy.batch { nil }
-      }.to raise_error(BatchLoader::BatchAlreadyExistsError)
+      expect(post.user_lazy.batch).to eq("Batch from User")
     end
 
     it 'works without cache between different BatchLoader instances for the same item' do

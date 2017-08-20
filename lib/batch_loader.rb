@@ -6,7 +6,6 @@ require "batch_loader/middleware"
 
 class BatchLoader
   NoBatchError = Class.new(StandardError)
-  BatchAlreadyExistsError = Class.new(StandardError)
 
   def self.for(item)
     new(item: item)
@@ -17,11 +16,11 @@ class BatchLoader
   end
 
   def batch(cache: true, &batch_block)
-    raise BatchAlreadyExistsError if @batch_block
-
     @cache = cache
     @batch_block = batch_block
     executor_proxy.add(item: @item)
+
+    singleton_class.class_eval { undef_method(:batch) }
 
     self
   end
@@ -60,21 +59,23 @@ class BatchLoader
     return if executor_proxy.value_loaded?(item: @item)
 
     items = executor_proxy.list_items
-    loader_ = loader
-    items.each { |item| loader_.call(item, nil) }
+    loader = ->(item, value) { executor_proxy.load(item: item, value: value) }
+    items.each { |item| loader.call(item, nil) }
     @batch_block.call(items, loader)
     executor_proxy.delete_items
   end
 
-  def loader
-    ->(item, value) { executor_proxy.load(item: item, value: value) }
+  def singleton_class
+    class << self
+      self
+    end
   end
 
   def replace_with!(value)
     BatchLoader.send(:without_warnings) do
-      ignore_method_names = [:singleton_method_added].freeze
-      (value.methods - ignore_method_names).each do |method_name|
-        (class << self; self; end).class_eval do
+      ignore_method_names = %i[singleton_method_added].freeze
+      singleton_class.class_eval do
+        (value.methods - ignore_method_names).each do |method_name|
           define_method(method_name) do |*args, &block|
             value.public_send(method_name, *args, &block)
           end
@@ -107,7 +108,7 @@ class BatchLoader
   end
 
   without_warnings do
-    ignore_method_names = [:respond_to?]
-    (Object.instance_methods - ignore_method_names).each { |method_name| undef_method(method_name) }
+    leave_method_names = %i[batch batch_loader? respond_to?].freeze
+    (instance_methods - leave_method_names).each { |method_name| undef_method(method_name) }
   end
 end

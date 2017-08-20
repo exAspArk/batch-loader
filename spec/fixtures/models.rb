@@ -62,4 +62,8 @@ class User
   def initialize(id:)
     @id = id
   end
+
+  def batch
+    "Batch from User"
+  end
 end
