@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class BatchLoader
   class GraphQL
     class Wrapper

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "batch_loader/version"
 require "batch_loader/executor_proxy"
 require "batch_loader/middleware"
@@ -5,9 +7,6 @@ require "batch_loader/middleware"
 class BatchLoader
   NoBatchError = Class.new(StandardError)
   BatchAlreadyExistsError = Class.new(StandardError)
-
-  NOT_REPLACABLE_METHOD_NAMES = [:singleton_method_added]
-  OVERRIDDEN_OBJECT_METHOD_NAMES = [:respond_to?]
 
   def self.for(item)
     new(item: item)
@@ -73,7 +72,8 @@ class BatchLoader
 
   def replace_with!(value)
     BatchLoader.send(:without_warnings) do
-      (value.methods - NOT_REPLACABLE_METHOD_NAMES).each do |method_name|
+      ignore_method_names = [:singleton_method_added].freeze
+      (value.methods - ignore_method_names).each do |method_name|
         (class << self; self; end).class_eval do
           define_method(method_name) do |*args, &block|
             value.public_send(method_name, *args, &block)
@@ -107,6 +107,7 @@ class BatchLoader
   end
 
   without_warnings do
-    (Object.instance_methods - OVERRIDDEN_OBJECT_METHOD_NAMES).each { |method_name| undef_method(method_name) }
+    ignore_method_names = [:respond_to?]
+    (Object.instance_methods - ignore_method_names).each { |method_name| undef_method(method_name) }
   end
 end

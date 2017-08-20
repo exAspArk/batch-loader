@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class BatchLoader
   class Middleware
     def initialize(app)
