@@ -6,7 +6,7 @@
 [![Downloads](https://img.shields.io/gem/dt/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 [![Latest Version](https://img.shields.io/gem/v/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 
-This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, etc.
+This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTTP queries, etc.
 
 ## Contents
 
@@ -38,7 +38,7 @@ This gem provides a batching mechanism to avoid N+1 DB queries, HTTP queries, et
 * Automatically caches previous queries (identity map).
 * Thread-safe (`loader`).
 * No need to share batching through variables or custom defined classes.
-* No dependencies, no monkey-patches, no extra primitives such as Promises, just 200 LOC.
+* No dependencies, no monkey-patches, no extra primitives such as Promises.
 
 ## Usage
 
@@ -127,7 +127,7 @@ As we can see, batching is isolated and described right in a place where it's ne
 
 ### How it works
 
-In general, `BatchLoader` returns a lazy object (Ruby also uses `lazy` in [the standard library](https://ruby-doc.org/core-2.4.1/Enumerator/Lazy.html)). Each lazy object knows which data it needs to load and how to batch the query. When we would like to use the lazy objects, they will load data once without N+1 queries.
+In general, `BatchLoader` returns a lazy object. Each lazy object knows which data it needs to load and how to batch the query. As soon as you need to use the lazy objects, they will be automatically loaded once without N+1 queries.
 
 So, when we call `BatchLoader.for` we pass an item (`user_id`) which should be collected and used for batching later. For the `batch` method, we pass a block which will use all the collected items (`user_ids`):
 
@@ -145,7 +145,7 @@ BatchLoader.for(post.<b>user_id</b>).batch do |user_ids, loader|
 end
 </pre>
 
-Now if we would like to use (`puts`) the lazy objects, they will automatically load and return the loaded values:
+When we call any method on the lazy object, it'll be automatically loaded through batching for all instantiated `BatchLoader`s:
 
 <pre>
 puts users # => SELECT * FROM users WHERE id IN (1, 2, 3)
@@ -268,7 +268,7 @@ PostType = GraphQL::ObjectType.define do
 end
 ```
 
-And setup GraphQL to understand which fields are lazy:
+And setup GraphQL to use the built-in `lazy_resolve` method:
 
 ```ruby
 Schema = GraphQL::Schema.define do
@@ -297,6 +297,12 @@ puts user_lazy(1) # no request
 # => <#User:...>
 ```
 
+Usually, it's just enough to clear the cache between HTTP requests in the app. To do so, simply add the middleware:
+
+```ruby
+use BatchLoader::Middleware
+```
+
 To drop the cache manually you can run:
 
 ```ruby
@@ -306,12 +312,6 @@ puts user_lazy(1) # no request
 BatchLoader::Executor.clear_current
 
 puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
-```
-
-Usually, it's just enough to clear the cache between HTTP requests in the app. To do so, simply add the middleware:
-
-```ruby
-use BatchLoader::Middleware # calls "BatchLoader::Executor.clear_current" after each request
 ```
 
 In some rare cases it's useful to disable caching for `BatchLoader`. For example, in tests or after data mutations:
@@ -370,7 +370,7 @@ However, `batch-loader` has some differences:
 * It doesn't try to mimic implementations in other programming languages which have an asynchronous nature. So, it doesn't load extra dependencies to bring such primitives as Promises, which are not very popular in Ruby community.
 Instead, it uses the idea of lazy objects, which are included in the [Ruby standard library](https://ruby-doc.org/core-2.4.1/Enumerable.html#method-i-lazy). These lazy objects allow one to return the necessary data at the end when it's necessary.
 * It doesn't force you to share batching through variables or custom defined classes, just pass a block to the `batch` method.
-* It doesn't require to return an array of the loaded objects in the same order as the passed items. I find it difficult to satisfy these constraints: to sort the loaded objects, add `nil` values for the missing ones, etc. Instead, it provides the `loader` lambda which simply maps an item to the loaded object.
+* It doesn't require to return an array of the loaded objects in the same order as the passed items. I find it difficult to satisfy these constraints: to sort the loaded objects and add `nil` values for the missing ones. Instead, it provides the `loader` lambda which simply maps an item to the loaded object.
 * It doesn't depend on any other external dependencies. For example, no need to load huge external libraries for thread-safety, the gem is thread-safe out of the box.
 
 ## License
