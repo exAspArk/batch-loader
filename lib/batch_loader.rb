@@ -3,6 +3,7 @@
 require "batch_loader/version"
 require "batch_loader/executor_proxy"
 require "batch_loader/middleware"
+require "batch_loader/graphql"
 
 class BatchLoader
   NoBatchError = Class.new(StandardError)
@@ -62,7 +63,7 @@ class BatchLoader
     loader = ->(item, value) { executor_proxy.load(item: item, value: value) }
     items.each { |item| loader.call(item, nil) }
     @batch_block.call(items, loader)
-    executor_proxy.delete_items
+    executor_proxy.delete(items: items)
   end
 
   def singleton_class

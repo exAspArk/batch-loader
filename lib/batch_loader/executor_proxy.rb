@@ -13,15 +13,15 @@ class BatchLoader
     end
 
     def add(item:)
-      items << item
+      items_to_load << item
     end
 
     def list_items
-      items.to_a
+      items_to_load.to_a
     end
 
-    def delete_items
-      global_executor.items_by_block[@block_hash_key] = Set.new
+    def delete(items:)
+      global_executor.items_by_block[@block_hash_key] = items_to_load - items
     end
 
     def load(item:, value:)
@@ -42,7 +42,7 @@ class BatchLoader
 
     private
 
-    def items
+    def items_to_load
       global_executor.items_by_block[@block_hash_key]
     end
 

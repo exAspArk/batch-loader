@@ -1,5 +1,3 @@
-require "batch_loader/graphql"
-
 UserType = GraphQL::ObjectType.define do
   name "User"
   field :id, !types.ID
