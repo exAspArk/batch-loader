@@ -1,16 +1,15 @@
 require "bundler/setup"
 
-require "graphql"
-
-require "batch_loader"
-
-require "fixtures/models"
-require "fixtures/graphql_schema"
-
 if ENV['CI']
   require 'coveralls'
   Coveralls.wear!
 end
+
+require "batch_loader"
+
+require "graphql"
+require "fixtures/models"
+require "fixtures/graphql_schema"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

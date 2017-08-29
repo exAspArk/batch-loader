@@ -77,6 +77,15 @@ RSpec.describe BatchLoader do
     end
   end
 
+  describe '#batch_loader?' do
+    it 'always returns true' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      expect(post.user_lazy.batch_loader?).to eq(true)
+    end
+  end
+
   describe '#batch' do
     it 'delegates the second batch call to the loaded value' do
       user = User.save(id: 1)
