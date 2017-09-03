@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require "batch_loader/version"
 require "batch_loader/executor_proxy"
 require "batch_loader/middleware"
