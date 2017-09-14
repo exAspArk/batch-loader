@@ -31,11 +31,11 @@ end
 # with BatchLoader without cache 1.000  i/100ms
 
 # Calculating -------------------------------------
-# without BatchLoader            965.088k (±15.1%) i/s - 3.399M   in 3.864552s
-# with BatchLoader with cache    991.089k (± 8.0%) i/s - 3.272M
-# with BatchLoader without cache 75.239k (±18.1%) i/s  - 345.350k in 4.883875s
+# without BatchLoader            939.708k (±19.2%) i/s - 3.241M   in 3.907448s
+# with BatchLoader with cache    990.611k (± 8.3%) i/s - 3.283M
+# with BatchLoader without cache 76.292k (±18.0%) i/s  - 350.402k in 4.886185s
 
 # Comparison:
-# with BatchLoader with cache:    991089.2 i/s
-# without BatchLoader:            965088.1 i/s - same-ish: difference falls within error
-# with BatchLoader without cache: 75238.7 i/s  - 13.17x slower
+# with BatchLoader with cache:    990611.0 i/s
+# without BatchLoader:            939708.2 i/s - same-ish: difference falls within error
+# with BatchLoader without cache: 76292.0 i/s  - 12.98x  slower

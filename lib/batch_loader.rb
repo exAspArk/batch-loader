@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 require "set"
+require "forwardable"
+
 require "batch_loader/version"
 require "batch_loader/executor_proxy"
 require "batch_loader/middleware"
 require "batch_loader/graphql"
 
 class BatchLoader
+  extend Forwardable
+
   NoBatchError = Class.new(StandardError)
 
   def self.for(item)
@@ -74,15 +78,11 @@ class BatchLoader
   end
 
   def replace_with!(value)
-    BatchLoader.send(:without_warnings) do
-      ignore_method_names = %i[singleton_method_added].freeze
-      singleton_class.class_eval do
-        (value.methods - ignore_method_names).each do |method_name|
-          define_method(method_name) do |*args, &block|
-            value.public_send(method_name, *args, &block)
-          end
-        end
-      end
+    @loaded_value = value
+
+    singleton_class.class_eval do
+      ignore_method_names = %i[object_id __send__ singleton_method_added].freeze
+      def_delegators :@loaded_value, *(value.methods - ignore_method_names)
     end
   end
 
@@ -98,19 +98,6 @@ class BatchLoader
     end
   end
 
-  class << self
-    private
-
-    def without_warnings(&block)
-      warning_level = $VERBOSE
-      $VERBOSE = nil
-      block.call
-      $VERBOSE = warning_level
-    end
-  end
-
-  without_warnings do
-    leave_method_names = %i[batch batch_loader? respond_to?].freeze
-    (instance_methods - leave_method_names).each { |method_name| undef_method(method_name) }
-  end
+  leave_method_names = %i[object_id __send__ batch batch_loader? respond_to?].freeze
+  (instance_methods - leave_method_names).each { |method_name| undef_method(method_name) }
 end
