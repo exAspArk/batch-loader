@@ -11,15 +11,9 @@ require "batch_loader/graphql"
 class BatchLoader
   extend Forwardable
 
-  INSTANCE_METHOD_NAMES = %i[
-    object_id
-    __id__
-    __send__
-    singleton_method_added
-    batch
-    batch_loader?
-    respond_to?
-  ].freeze
+  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added batch_loader? respond_to? batch inspect].freeze
+  REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
+  LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
 
   NoBatchError = Class.new(StandardError)
 
@@ -46,7 +40,11 @@ class BatchLoader
   end
 
   def respond_to?(method_name)
-    method_name == :batch_loader? || method_missing(:respond_to?, method_name)
+    LEFT_INSTANCE_METHODS.include?(method_name) || method_missing(:respond_to?, method_name)
+  end
+
+  def inspect
+    "#<BatchLoader:0x#{(object_id << 1)}>"
   end
 
   private
@@ -76,25 +74,22 @@ class BatchLoader
 
     items = executor_proxy.list_items
     loader = ->(item, value) { executor_proxy.load(item: item, value: value) }
-    @batch_block.call(items, loader)
 
+    @batch_block.call(items, loader)
     items.each do |item|
       next if executor_proxy.value_loaded?(item: item)
-      loader.call(item, nil) # use "nil" for unloaded item after succesfull batching
+      loader.call(item, nil) # use "nil" for not loaded item after succesfull batching
     end
-
     executor_proxy.delete(items: items)
   end
 
   def singleton_class
-    class << self
-      self
-    end
+    class << self ; self ; end
   end
 
   def replace_with!(value)
     @loaded_value = value
-    singleton_class.class_eval { def_delegators :@loaded_value, *(value.methods - INSTANCE_METHOD_NAMES) }
+    singleton_class.class_eval { def_delegators :@loaded_value, *(value.methods - LEFT_INSTANCE_METHODS) }
   end
 
   def purge_cache
@@ -109,5 +104,5 @@ class BatchLoader
     end
   end
 
-  (instance_methods - INSTANCE_METHOD_NAMES).each { |method_name| undef_method(method_name) }
+  (instance_methods - IMPLEMENTED_INSTANCE_METHODS).each { |method_name| undef_method(method_name) }
 end

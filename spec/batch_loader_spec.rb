@@ -86,6 +86,19 @@ RSpec.describe BatchLoader do
     end
   end
 
+  describe '#inspect' do
+    it 'returns BatchLoader without syncing and delegates #inspect after' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      batch_loader = post.user_lazy
+
+      expect(batch_loader.inspect).to match(/#<BatchLoader:0x\w+>/)
+      expect(batch_loader.to_s).to match(/#<User:0x\w+>/)
+      expect(batch_loader.inspect).to match(/#<User:0x\w+ @id=1>/)
+    end
+  end
+
   describe '#batch' do
     it 'delegates the second batch call to the loaded value' do
       user = User.save(id: 1)
@@ -117,6 +130,14 @@ RSpec.describe BatchLoader do
 
       expect(user_lazy).to eq(user)
       expect(user_lazy).to eq(user)
+    end
+
+    it 'raises the error if something went wrong in the batch' do
+      result = BatchLoader.for(1).batch { |ids, loader| raise "Oops" }
+      # should work event with Pry which currently shallows errors on #inspect call https://github.com/pry/pry/issues/1642
+      # require 'pry'; binding.pry
+      expect { result.to_s }.to raise_error("Oops")
+      expect { result.to_s }.to raise_error("Oops")
     end
   end
 end
