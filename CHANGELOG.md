@@ -8,9 +8,16 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.1...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.2...HEAD)
 
 * WIP
+
+#### [v1.0.2](https://github.com/exAspArk/batch-loader/compare/v1.0.1...v1.0.2) – 2017-09-14
+
+* `Added`: `BatchLoader#inspect` method because of Pry, which [swallows errors](https://github.com/pry/pry/issues/1642).
+* `Added`: benchmarks.
+* `Fixed`: caching `nil`s for not loaded values only after successful `#batch` execution.
+* `Changed`: internal implementation with Ruby `Forwardable`, don't delegate methods like `object_id` and `__send__`.
 
 #### [v1.0.1](https://github.com/exAspArk/batch-loader/compare/v1.0.0...v1.0.1) – 2017-09-03
 
