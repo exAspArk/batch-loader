@@ -11,6 +11,16 @@ require "batch_loader/graphql"
 class BatchLoader
   extend Forwardable
 
+  INSTANCE_METHOD_NAMES = %i[
+    object_id
+    __id__
+    __send__
+    singleton_method_added
+    batch
+    batch_loader?
+    respond_to?
+  ].freeze
+
   NoBatchError = Class.new(StandardError)
 
   def self.for(item)
@@ -66,8 +76,13 @@ class BatchLoader
 
     items = executor_proxy.list_items
     loader = ->(item, value) { executor_proxy.load(item: item, value: value) }
-    items.each { |item| loader.call(item, nil) }
     @batch_block.call(items, loader)
+
+    items.each do |item|
+      next if executor_proxy.value_loaded?(item: item)
+      loader.call(item, nil) # use "nil" for unloaded item after succesfull batching
+    end
+
     executor_proxy.delete(items: items)
   end
 
@@ -79,11 +94,7 @@ class BatchLoader
 
   def replace_with!(value)
     @loaded_value = value
-
-    singleton_class.class_eval do
-      ignore_method_names = %i[object_id __send__ singleton_method_added].freeze
-      def_delegators :@loaded_value, *(value.methods - ignore_method_names)
-    end
+    singleton_class.class_eval { def_delegators :@loaded_value, *(value.methods - INSTANCE_METHOD_NAMES) }
   end
 
   def purge_cache
@@ -98,6 +109,5 @@ class BatchLoader
     end
   end
 
-  leave_method_names = %i[object_id __send__ batch batch_loader? respond_to?].freeze
-  (instance_methods - leave_method_names).each { |method_name| undef_method(method_name) }
+  (instance_methods - INSTANCE_METHOD_NAMES).each { |method_name| undef_method(method_name) }
 end
