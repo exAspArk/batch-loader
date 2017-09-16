@@ -15,6 +15,31 @@ that you can set version constraints properly.
 #### [v1.0.2](https://github.com/exAspArk/batch-loader/compare/v1.0.1...v1.0.2) – 2017-09-14
 
 * `Added`: `BatchLoader#inspect` method because of Pry, which [swallows errors](https://github.com/pry/pry/issues/1642).
+
+```ruby
+# Before:
+require 'pry'
+binding.pry
+
+pry(main)> result = BatchLoader.for(1).batch { |ids, loader| raise "Oops" };
+pry(main)> result # Pry called result.inspect and swallowed the "Oops" error
+# => #<BatchLoader:0x8>
+pry(main)> result.id
+# => NoMethodError: undefined method `id' for nil:NilClass
+```
+
+```ruby
+# After:
+require 'pry'
+binding.pry
+
+pry(main)> result = BatchLoader.for(1).batch { |ids, loader| raise "Oops" };
+pry(main)> result
+# => #<BatchLoader:0x140653946335160>
+pry(main)> result.id
+# => RuntimeError: Oops
+```
+
 * `Added`: benchmarks.
 * `Fixed`: caching `nil`s for not loaded values only after successful `#batch` execution.
 * `Changed`: internal implementation with Ruby `Forwardable`, don't delegate methods like `object_id` and `__send__`.
@@ -27,39 +52,53 @@ that you can set version constraints properly.
 
 * `Removed`: `BatchLoader.sync!` and `BatchLoader#sync`. Now syncing is done implicitly when you call any method on the lazy object.
 
-Before:
-
 ```ruby
 def load_user(user_id)
   BatchLoader.for(user_id).batch { ... }
 end
 
+# Before:
 users = [load_user(1), load_user(2), load_user(3)]
 puts BatchLoader.sync!(users) # or users.map!(&:sync)
 ```
 
-After:
-
 ```ruby
+# After:
 users = [load_user(1), load_user(2), load_user(3)]
 puts users
 ```
 
 * `Removed`: `BatchLoader#load`. Use `loader` lambda instead:
 
-Before:
-
 ```ruby
+# Before:
 BatchLoader.for(user_id).batch do |user_ids, batch_loader|
   user_ids.each { |user_id| batch_loader.load(user_id, user_id) }
 end
 ```
 
-After:
-
 ```ruby
+# After:
 BatchLoader.for(user_id).batch do |user_ids, loader|
   user_ids.each { |user_id| loader.call(user_id, user_id) }
+end
+```
+
+* `Changed`: use `BatchLoader::GraphQL` in GraphQL schema:
+
+```ruby
+# Before:
+Schema = GraphQL::Schema.define do
+  # ...
+  lazy_resolve BatchLoader, :sync
+end
+```
+
+```ruby
+# After:
+Schema = GraphQL::Schema.define do
+  # ...
+  use BatchLoader::GraphQL
 end
 ```
 
