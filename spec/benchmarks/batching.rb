@@ -38,15 +38,15 @@ end
 #    with purged cache     1.000  i/100ms
 #        without cache     1.000  i/100ms
 # Calculating -------------------------------------
-#                 pure    957.329k (±16.7%) i/s -      3.256M in   3.849922s
-#       already synced    987.154k (± 9.8%) i/s -      3.117M
-#           with cache    290.951  (±16.8%) i/s -      1.399k in   4.999113s
-#    with purged cache    285.393  (±17.5%) i/s -      1.370k in   5.001320s
-#        without cache     80.347k (±18.5%) i/s -    363.375k in   4.882113s
+#                 pure    960.344k (±16.1%) i/s -      3.283M
+#       already synced    989.078k (± 9.0%) i/s -      3.200M
+#           with cache      8.400k (±20.1%) i/s -     39.442k in   4.982755s
+#    with purged cache      7.218k (±19.0%) i/s -     34.015k in   4.981920s
+#        without cache     76.683k (±19.5%) i/s -    345.987k in   4.874809s
 
 # Comparison:
-#       already synced:   987153.6 i/s
-#                 pure:   957329.3 i/s - same-ish: difference falls within error
-#        without cache:    80347.0 i/s - 12.29x  slower
-#           with cache:      291.0 i/s - 3392.85x  slower
-#    with purged cache:      285.4 i/s - 3458.92x  slower
+#       already synced:   989077.6 i/s
+#                 pure:   960343.8 i/s - same-ish: difference falls within error
+#        without cache:    76682.6 i/s - 12.90x  slower
+#           with cache:     8399.6 i/s - 117.75x  slower
+#    with purged cache:     7218.5 i/s - 137.02x  slower

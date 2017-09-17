@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "set"
-require "forwardable"
 
 require "batch_loader/version"
 require "batch_loader/executor_proxy"
@@ -9,8 +8,6 @@ require "batch_loader/middleware"
 require "batch_loader/graphql"
 
 class BatchLoader
-  extend Forwardable
-
   IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added batch_loader? respond_to? batch inspect].freeze
   REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
   LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
@@ -88,8 +85,13 @@ class BatchLoader
   end
 
   def replace_with!(value)
-    @loaded_value = value
-    singleton_class.class_eval { def_delegators :@loaded_value, *(value.methods - LEFT_INSTANCE_METHODS) }
+    singleton_class.class_eval do
+      (value.methods - LEFT_INSTANCE_METHODS).each do |method_name|
+        define_method(method_name) do |*args, &block|
+          value.public_send(method_name, *args, &block)
+        end
+      end
+    end
   end
 
   def purge_cache
