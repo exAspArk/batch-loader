@@ -8,7 +8,7 @@ class BatchLoader
       end
 
       def sync
-        @batch_loader
+        @batch_loader.__sync
       end
     end
 
@@ -21,7 +21,7 @@ class BatchLoader
       old_resolve_proc = field.resolve_proc
       new_resolve_proc = ->(object, arguments, context) do
         result = old_resolve_proc.call(object, arguments, context)
-        result.respond_to?(:batch_loader?) ? BatchLoader::GraphQL::Wrapper.new(result) : result
+        result.respond_to?(:__sync) ? BatchLoader::GraphQL::Wrapper.new(result) : result
       end
 
       field.redefine { resolve(new_resolve_proc) }

@@ -62,6 +62,29 @@ RSpec.describe BatchLoader do
 
       expect { post.user_lazy.foo }.to raise_error(NoMethodError, /undefined method `foo' for #<User/)
     end
+
+    it 'works with nested BatchLoaders' do
+      user1 = User.save(id: 1)
+      Post.new(user_id: user1.id)
+      user2 = User.save(id: 2)
+      Post.new(user_id: user2.id)
+      nested_batch_loader = ->(id) do
+        BatchLoader.for(id).batch do |user_ids, loader|
+          User.where(id: user_ids).each { |u| loader.call(u.id, u.id) }
+        end
+      end
+      batch_loader = ->(id) do
+        BatchLoader.for(id).batch do |user_ids, loader|
+          user_ids.each { |user_id| loader.call(user_id, nested_batch_loader.call(user_id)) }
+        end
+      end
+
+      expect(User).to receive(:where).with(id: [1, 2]).once.and_call_original
+
+      result = [batch_loader.call(1), batch_loader.call(2)]
+
+      expect(result).to eq([1, 2])
+    end
   end
 
   context 'loader' do
@@ -74,15 +97,6 @@ RSpec.describe BatchLoader do
       end
 
       expect(lazy).to eq(2)
-    end
-  end
-
-  describe '#batch_loader?' do
-    it 'always returns true' do
-      user = User.save(id: 1)
-      post = Post.new(user_id: user.id)
-
-      expect(post.user_lazy.batch_loader?).to eq(true)
     end
   end
 

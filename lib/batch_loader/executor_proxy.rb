@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "batch_loader/executor"
+require_relative "./executor"
 
 class BatchLoader
   class ExecutorProxy

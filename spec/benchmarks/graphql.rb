@@ -1,25 +1,27 @@
 # frozen_string_literal: true
 
-# Usage: ruby spec/benchmarks/profiling.rb && open tmp/stack.html
+# Usage: ruby spec/benchmarks/graphql.rb && open tmp/stack.html
 
 require 'ruby-prof'
+require "graphql"
 
 require_relative "../../lib/batch_loader"
 require_relative "../fixtures/models"
+require_relative "../fixtures/graphql_schema"
 
-User.save(id: 1)
-iterations = Array.new(5_000)
+iterations = Array.new(2_000)
 
-def batch_loader
-  BatchLoader.for(1).batch do |ids, loader|
-    User.where(id: ids).each { |user| loader.call(user.id, user) }
-  end
+iterations.each_with_index do |_, i|
+  user = User.save(id: i)
+  Post.save(user_id: user.id)
 end
+
+query = "{ posts { user { id } } }"
 
 RubyProf.measure_mode = RubyProf::WALL_TIME
 RubyProf.start
 
-iterations.each { batch_loader.id } # 2.46, 2.87, 2.56 sec
+GraphqlSchema.execute(query) # 0.45, 0.52, 0.47 sec
 
 result = RubyProf.stop
 stack_printer = RubyProf::CallStackPrinter.new(result)

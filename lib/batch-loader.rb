@@ -1,1 +1,1 @@
-require "batch_loader"
+require_relative "./batch_loader"
