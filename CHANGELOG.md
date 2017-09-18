@@ -8,9 +8,15 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.2...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.3...HEAD)
 
 * WIP
+
+#### [v1.0.3](https://github.com/exAspArk/batch-loader/compare/v1.0.2...v1.0.3) – 2017-09-18
+
+* `Fixed`: auto syncing performance up to 30x times compared to [v1.0.2](https://github.com/exAspArk/batch-loader/blob/master/CHANGELOG.md#v102--2017-09-14). Ruby `Forwardable` with `def_delegators` is too slow.
+* `Fixed`: GraphQL performance up to 3x times by disabling auto syncing in favor of syncing with [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) `lazy_resolve`.
+* `Added`: more benchmarks.
 
 #### [v1.0.2](https://github.com/exAspArk/batch-loader/compare/v1.0.1...v1.0.2) – 2017-09-14
 
