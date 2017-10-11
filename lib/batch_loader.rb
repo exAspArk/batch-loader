@@ -32,8 +32,8 @@ class BatchLoader
     self
   end
 
-  def respond_to?(method_name)
-    LEFT_INSTANCE_METHODS.include?(method_name) || method_missing(:respond_to?, method_name)
+  def respond_to?(method_name, include_private = false)
+    LEFT_INSTANCE_METHODS.include?(method_name) || method_missing(:respond_to?, method_name, include_private)
   end
 
   def inspect
