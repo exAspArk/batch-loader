@@ -8,7 +8,8 @@ require_relative "./batch_loader/middleware"
 require_relative "./batch_loader/graphql"
 
 class BatchLoader
-  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect].freeze
+  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added
+                                    __sync respond_to? batch inspect method_missing].freeze
   REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
   LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
 
