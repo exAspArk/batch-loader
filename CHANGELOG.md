@@ -8,7 +8,11 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.3...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.4...HEAD)
+
+* WIP
+
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.3...v1.0.4)
 
 * `Fixed`: Fix arity bug in `respond_to?` [#3](https://github.com/exAspArk/batch-loader/pull/3)
 
