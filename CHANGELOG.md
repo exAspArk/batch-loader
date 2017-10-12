@@ -10,7 +10,7 @@ that you can set version constraints properly.
 
 #### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.3...HEAD)
 
-* `Fixed`: Fix arity bug in `respond_to?`
+* `Fixed`: Fix arity bug in `respond_to?` [#3](https://github.com/exAspArk/batch-loader/pull/3)
 
 #### [v1.0.3](https://github.com/exAspArk/batch-loader/compare/v1.0.2...v1.0.3) – 2017-09-18
 

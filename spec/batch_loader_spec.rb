@@ -113,6 +113,26 @@ RSpec.describe BatchLoader do
     end
   end
 
+  describe '#respond_to?' do
+    it 'returns false for private methods by default' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      batch_loader = post.user_lazy
+
+      expect(batch_loader.respond_to?(:some_private_method)).to eq(false)
+    end
+
+    it 'returns true for private methods if include_private flag is true' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      batch_loader = post.user_lazy
+
+      expect(batch_loader.respond_to?(:some_private_method, true)).to eq(true)
+    end
+  end
+
   describe '#batch' do
     it 'delegates the second batch call to the loaded value' do
       user = User.save(id: 1)

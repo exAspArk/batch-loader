@@ -66,4 +66,10 @@ class User
   def batch
     "Batch from User"
   end
+
+  private
+
+  def some_private_method
+    :some_private_method
+  end
 end
