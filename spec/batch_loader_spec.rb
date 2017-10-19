@@ -87,6 +87,55 @@ RSpec.describe BatchLoader do
     end
   end
 
+  context 'multi load with meta programming' do
+    it 'loads multi items' do
+      items = []
+      {
+        user: { name: 'User', ids: [1, 2, 3, 4, 5] },
+        post: { name: 'Post', ids: [2, 3, 4, 1, 2] },
+      }.each do |type, kind|
+        kind[:ids].map do |id|
+          items << BatchLoader.for(id, type).batch do |ids, loader, slug|
+            ids.each { |item| loader.call(item, OpenStruct.new({name: slug}.merge({id: item})) ) }
+          end
+        end
+      end
+
+      expect(items.size).to eq(10)
+      expect(items.select { |item| item.name === :user }.map(&:id)).to eq([1, 2, 3, 4, 5])
+      expect(items.select { |item| item.name === :post }.map(&:id)).to eq([2, 3, 4, 1, 2])
+    end
+
+    it 'with query' do
+      User.save(id: 1)
+      User.save(id: 2)
+      User.save(id: 3)
+
+      Role.save(id: 1)
+      Role.save(id: 2)
+      Role.save(id: 4)
+      Role.save(id: 5)
+
+      meta_programming = {
+        user: { name: 'User', ids: [1, 2, 3], items: [] },
+        role: { name: 'Role', ids: [1, 2, 4, 5], items: [] },
+      }.each do |type, kind|
+        kind[:ids].map do |id|
+          kind[:items] << BatchLoader.for(id, type, kind).batch do |ids, loader, slug, context|
+            Object.const_get(slug.capitalize).where(id: ids).each { |item| loader.call(item.id, item) }
+          end
+        end
+      end
+
+      # meta_programming
+      expect(meta_programming).to be_a_kind_of(Hash)
+      expect(meta_programming[:user][:items].size).to eq(3)
+      expect(meta_programming[:user][:items].map(&:id)).to eq([1, 2, 3])
+      expect(meta_programming[:role][:items].size).to eq(4)
+      expect(meta_programming[:role][:items].map(&:id)).to eq([1, 2, 4, 5])
+    end
+  end
+
   context 'loader' do
     it 'loads the data even in a separate thread' do
       lazy = BatchLoader.for(1).batch do |nums, loader|
