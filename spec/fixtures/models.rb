@@ -34,26 +34,26 @@ class Post
   end
 end
 
-class User
+class ResourceBase
   class << self
     def save(id:)
       ensure_init_store
-      @users[id] = new(id: id)
+      @resources[id] = new(id: id)
     end
 
     def where(id:)
       ensure_init_store
-      @users.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
+      @resources.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
     end
 
     def destroy_all
-      @users = {}
+      @resources = {}
     end
 
     private
 
     def ensure_init_store
-      @users ||= {}
+      @resources ||= {}
     end
   end
 
@@ -62,7 +62,9 @@ class User
   def initialize(id:)
     @id = id
   end
+end
 
+class User < ResourceBase
   def batch
     "Batch from User"
   end
@@ -72,4 +74,7 @@ class User
   def some_private_method
     :some_private_method
   end
+end
+
+class Role < ResourceBase
 end
