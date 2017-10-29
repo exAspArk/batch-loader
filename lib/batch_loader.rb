@@ -22,7 +22,8 @@ class BatchLoader
     @item = item
   end
 
-  def batch(cache: true, &batch_block)
+  def batch(default_value: nil, cache: true, &batch_block)
+    @default_value = default_value.respond_to?(:call) ? default_value.call : default_value
     @cache = cache
     @batch_block = batch_block
     __executor_proxy.add(item: @item)
@@ -80,7 +81,7 @@ class BatchLoader
     @batch_block.call(items, loader)
     items.each do |item|
       next if __executor_proxy.value_loaded?(item: item)
-      loader.call(item, nil) # use "nil" for not loaded item after succesfull batching
+      loader.call(item, @default_value)
     end
     __executor_proxy.delete(items: items)
   end
@@ -109,7 +110,7 @@ class BatchLoader
   def __executor_proxy
     @__executor_proxy ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless @batch_block
-      BatchLoader::ExecutorProxy.new(&@batch_block)
+      BatchLoader::ExecutorProxy.new(@default_value, &@batch_block)
     end
   end
 
