@@ -4,6 +4,7 @@ require "set"
 
 require_relative "./batch_loader/version"
 require_relative "./batch_loader/executor_proxy"
+require_relative "./batch_loader/executor_callable"
 require_relative "./batch_loader/middleware"
 require_relative "./batch_loader/graphql"
 
@@ -76,7 +77,7 @@ class BatchLoader
     return if __executor_proxy.value_loaded?(item: @item)
 
     items = __executor_proxy.list_items
-    loader = ->(item, value) { __executor_proxy.load(item: item, value: value) }
+    loader = ExecutorCallable.new(__executor_proxy)
 
     @batch_block.call(items, loader)
     items.each do |item|

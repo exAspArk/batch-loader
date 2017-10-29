@@ -114,6 +114,41 @@ RSpec.describe BatchLoader do
 
       expect(lazy).to eq([1, 123])
     end
+
+    it 'supports setting the value from return of loader.call block' do
+      lazy = BatchLoader.for(1).batch(default_value: {}) do |nums, loader|
+        nums.each do |num|
+          loader.call(num) { |vector| vector[num] = "ok"; vector }
+        end
+      end
+
+      expect(lazy).to eq(1 => "ok")
+    end
+
+
+    context "called with block and value syntax" do
+      it 'raises ArgumentError' do
+        lazy = BatchLoader.for(1).batch(default_value: {}) do |nums, loader|
+          nums.each do |num|
+            loader.call(num, "one value") { "too many values" }
+          end
+        end
+
+        expect { lazy.sync }.to raise_error(ArgumentError)
+      end
+    end
+
+    context "called with neither block nor value syntax" do
+      it 'raises ArgumentError' do
+        lazy = BatchLoader.for(1).batch do |nums, loader|
+          nums.each do |num|
+            loader.call(num)
+          end
+        end
+
+        expect { lazy.sync }.to raise_error(ArgumentError)
+      end
+    end
   end
 
   describe '#inspect' do
