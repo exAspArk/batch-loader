@@ -98,6 +98,22 @@ RSpec.describe BatchLoader do
 
       expect(lazy).to eq(2)
     end
+
+    it 'supports alternative default values' do
+      lazy = BatchLoader.for(1).batch(default_value: 123) do |nums, loader|
+        # No-op, so default is returned
+      end
+
+      expect(lazy).to eq(123)
+    end
+
+    it 'appends to the default value when possible' do
+      lazy = BatchLoader.for(1).batch(default_value: [1]) do |nums, loader|
+        nums.each { |num| loader.call(num, 123) }
+      end
+
+      expect(lazy).to eq([1, 123])
+    end
   end
 
   describe '#inspect' do
