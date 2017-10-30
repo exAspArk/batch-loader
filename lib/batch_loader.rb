@@ -4,7 +4,6 @@ require "set"
 
 require_relative "./batch_loader/version"
 require_relative "./batch_loader/executor_proxy"
-require_relative "./batch_loader/executor_callable"
 require_relative "./batch_loader/middleware"
 require_relative "./batch_loader/graphql"
 
@@ -12,6 +11,7 @@ class BatchLoader
   IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect].freeze
   REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
   LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
+  NULL_VALUE = :batch_loader_null
 
   NoBatchError = Class.new(StandardError)
 
@@ -77,7 +77,15 @@ class BatchLoader
     return if __executor_proxy.value_loaded?(item: @item)
 
     items = __executor_proxy.list_items
-    loader = ExecutorCallable.new(__executor_proxy)
+    loader =  -> (item, value = NULL_VALUE, &block) {
+      if block
+        raise ArgumentError, "Please pass a value or a block, not both" if value != NULL_VALUE
+        next_value = block.call(__executor_proxy.loaded_value(item: item))
+      else
+        next_value = value
+      end
+      __executor_proxy.load(item: item, value: next_value)
+    }
 
     @batch_block.call(items, loader)
     items.each do |item|
