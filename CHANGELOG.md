@@ -10,7 +10,8 @@ that you can set version constraints properly.
 
 #### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.4...HEAD)
 
-* WIP
+* `Added`: `default_value` override option.
+* `Added`: `loader.call {}` block syntax, for memoizing repeat calls to the same item.
 
 #### [v1.0.4](https://github.com/exAspArk/batch-loader/compare/v1.0.3...v1.0.4)
 
