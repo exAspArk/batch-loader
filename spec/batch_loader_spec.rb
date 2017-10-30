@@ -107,42 +107,23 @@ RSpec.describe BatchLoader do
       expect(lazy).to eq(123)
     end
 
-    it 'appends to the default value when possible' do
-      lazy = BatchLoader.for(1).batch(default_value: [1]) do |nums, loader|
-        nums.each { |num| loader.call(num, 123) }
-      end
-
-      expect(lazy).to eq([1, 123])
-    end
-
-    it 'supports setting the value from return of loader.call block' do
-      lazy = BatchLoader.for(1).batch(default_value: {}) do |nums, loader|
+    it 'supports memoizing repeated calls to the same item, via a block' do
+      lazy = BatchLoader.for(1).batch(default_value: []) do |nums, loader|
         nums.each do |num|
-          loader.call(num) { |vector| vector[num] = "ok"; vector }
+          loader.call(num) { |memo| memo.push(num) }
+          loader.call(num) { |memo| memo.push(num + 1) }
+          loader.call(num) { |memo| memo.push(num + 2) }
         end
       end
 
-      expect(lazy).to eq(1 => "ok")
+      expect(lazy).to eq([1,2,3])
     end
-
 
     context "called with block and value syntax" do
       it 'raises ArgumentError' do
         lazy = BatchLoader.for(1).batch(default_value: {}) do |nums, loader|
           nums.each do |num|
             loader.call(num, "one value") { "too many values" }
-          end
-        end
-
-        expect { lazy.sync }.to raise_error(ArgumentError)
-      end
-    end
-
-    context "called with neither block nor value syntax" do
-      it 'raises ArgumentError' do
-        lazy = BatchLoader.for(1).batch do |nums, loader|
-          nums.each do |num|
-            loader.call(num)
           end
         end
 

@@ -8,7 +8,6 @@ class BatchLoader
 
     def initialize(default_value, &block)
       @default_value = default_value
-      @value_appendable = @default_value.respond_to?(:push)
       @block = block
       @block_hash_key = block.source_location
       @global_executor = BatchLoader::Executor.ensure_current
@@ -27,11 +26,7 @@ class BatchLoader
     end
 
     def load(item:, value:)
-      loaded[item] = if value_appendable?
-          loaded_value(item: item).push(value)
-        else
-          value
-        end
+      loaded[item] = value
     end
 
     def loaded_value(item:)
@@ -48,10 +43,6 @@ class BatchLoader
 
     def unload_value(item:)
       loaded.delete(item)
-    end
-
-    def value_appendable?
-      @value_appendable
     end
 
     private
