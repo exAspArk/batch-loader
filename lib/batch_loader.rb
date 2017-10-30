@@ -24,7 +24,7 @@ class BatchLoader
   end
 
   def batch(default_value: nil, cache: true, &batch_block)
-    @default_value = default_value.respond_to?(:call) ? default_value.call : default_value
+    @default_value = default_value
     @cache = cache
     @batch_block = batch_block
     __executor_proxy.add(item: @item)
