@@ -4,9 +4,10 @@ require_relative "./executor"
 
 class BatchLoader
   class ExecutorProxy
-    attr_reader :block, :global_executor
+    attr_reader :default_value, :block, :global_executor
 
-    def initialize(&block)
+    def initialize(default_value, &block)
+      @default_value = default_value
       @block = block
       @block_hash_key = block.source_location
       @global_executor = BatchLoader::Executor.ensure_current
@@ -29,7 +30,11 @@ class BatchLoader
     end
 
     def loaded_value(item:)
-      loaded[item]
+      if value_loaded?(item: item)
+        loaded[item]
+      else
+        @default_value.dup
+      end
     end
 
     def value_loaded?(item:)

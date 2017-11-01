@@ -13,7 +13,7 @@ This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTT
 * [Highlights](#highlights)
 * [Usage](#usage)
   * [Why?](#why)
-  * [Basic example](#basic-example)
+  * [Basic examples](#basic-examples)
   * [How it works](#how-it-works)
   * [RESTful API example](#restful-api-example)
   * [GraphQL example](#graphql-example)
@@ -97,7 +97,7 @@ puts users                     #      Users
 
 But the problem here is that `load_posts` now depends on the child association and knows that it has to preload data for future use. And it'll do it every time, even if it's not necessary. Can we do better? Sure!
 
-### Basic example
+### Basic examples
 
 With `BatchLoader` we can rewrite the code above:
 
@@ -124,6 +124,51 @@ puts users                     #      Users      SELECT * FROM users WHERE id IN
 ```
 
 As we can see, batching is isolated and described right in a place where it's needed.
+
+For batches where there is no item in response to a call, we normally return nil. However, you can use `default_value:` to return something else instead. This is particularly useful for 1:Many relationships, where you
+
+```ruby
+def load_posts(ids)
+  Post.where(id: ids)
+end
+
+def load_user(post)
+  BatchLoader.for(post.user_id).batch(default_value: NullUser.new) do |user_ids, loader|
+    User.where(id: user_ids).each { |user| loader.call(user.id, user) }
+  end
+end
+
+posts = load_posts([1, 2, 3])
+
+
+users = posts.map do |post|
+  load_user(post)
+end
+
+puts users
+```
+
+For batches where the value is some kind of collection, such as an Array or Hash, `loader` also supports being called with a block, which yields the _current_ value, and returns the _next_ value. This is extremely useful for 1:Many relationships:
+
+```ruby
+def load_users(ids)
+  User.where(id: ids)
+end
+
+def load_comments(user)
+  BatchLoader.for(user.id).batch(default_value: []) do |comment_ids, loader|
+    Comment.where(user_id: user_ids).each do |comment|
+      loader.call(user.id) { |memo| memo.push(comment) }
+    end
+  end
+end
+
+users = load_users([1, 2, 3])
+
+comments = users.map do |user|
+  load_comments(user)
+end
+```
 
 ### How it works
 
