@@ -8,10 +8,14 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.0.4...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.1.0...HEAD)
 
-* `Added`: `default_value` override option.
-* `Added`: `loader.call {}` block syntax, for memoizing repeat calls to the same item.
+* WIP
+
+#### [v1.1.0](https://github.com/exAspArk/batch-loader/compare/v1.0.4...v1.1.0)
+
+* `Added`: `default_value` override option. [#8](https://github.com/exAspArk/batch-loader/pull/8)
+* `Added`: `loader.call {}` block syntax, for memoizing repeat calls to the same item. [#8](https://github.com/exAspArk/batch-loader/pull/8)
 
 #### [v1.0.4](https://github.com/exAspArk/batch-loader/compare/v1.0.3...v1.0.4)
 
