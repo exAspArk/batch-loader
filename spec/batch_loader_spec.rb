@@ -110,7 +110,7 @@ RSpec.describe BatchLoader do
       slow_executor_proxy = SlowExecutorProxy.new([], &batch_block)
       lazy = BatchLoader.new(item: 1, executor_proxy: slow_executor_proxy).batch(default_value: [], &batch_block)
 
-      expect(lazy).to eq([1, 2])
+      expect(lazy).to match_array([1, 2])
     end
 
     it 'supports alternative default values' do
