@@ -99,6 +99,20 @@ RSpec.describe BatchLoader do
       expect(lazy).to eq(2)
     end
 
+    it 'is thread-safe' do
+      batch_block = Proc.new do |ids, loader|
+        ids.each do |id|
+          thread = Thread.new { loader.call(id) { |value| value << id } }
+          loader.call(id) { |value| value << id + 1 }
+          thread.join
+        end
+      end
+      slow_executor_proxy = SlowExecutorProxy.new([], &batch_block)
+      lazy = BatchLoader.new(item: 1, executor_proxy: slow_executor_proxy).batch(default_value: [], &batch_block)
+
+      expect(lazy).to match_array([1, 2])
+    end
+
     it 'supports alternative default values' do
       lazy = BatchLoader.for(1).batch(default_value: 123) do |nums, loader|
         # No-op, so default is returned

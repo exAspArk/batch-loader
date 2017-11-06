@@ -11,6 +11,14 @@ require "graphql"
 require_relative "./fixtures/models"
 require_relative "./fixtures/graphql_schema"
 
+class SlowExecutorProxy < BatchLoader::ExecutorProxy
+  def value_loaded?(item:)
+    result = loaded.key?(item)
+    sleep 0.5
+    result
+  end
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

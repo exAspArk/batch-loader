@@ -18,8 +18,9 @@ class BatchLoader
     new(item: item)
   end
 
-  def initialize(item:)
+  def initialize(item:, executor_proxy: nil)
     @item = item
+    @__executor_proxy = executor_proxy
   end
 
   def batch(default_value: nil, cache: true, &batch_block)
@@ -76,23 +77,29 @@ class BatchLoader
     return if __executor_proxy.value_loaded?(item: @item)
 
     items = __executor_proxy.list_items
-    loader =  -> (item, value = (no_value = true; nil), &block) {
-      if no_value && !block
-        raise ArgumentError, "Please pass a value or a block"
-      elsif block && !no_value
-        raise ArgumentError, "Please pass a value or a block, not both"
-      end
-
-      next_value = block ? block.call(__executor_proxy.loaded_value(item: item)) : value
-      __executor_proxy.load(item: item, value: next_value)
-    }
-
+    loader = __loader
     @batch_block.call(items, loader)
     items.each do |item|
       next if __executor_proxy.value_loaded?(item: item)
       loader.call(item, @default_value)
     end
     __executor_proxy.delete(items: items)
+  end
+
+  def __loader
+    mutex = Mutex.new
+    -> (item, value = (no_value = true; nil), &block) do
+      if no_value && !block
+        raise ArgumentError, "Please pass a value or a block"
+      elsif block && !no_value
+        raise ArgumentError, "Please pass a value or a block, not both"
+      end
+
+      mutex.synchronize do
+        next_value = block ? block.call(__executor_proxy.loaded_value(item: item)) : value
+        __executor_proxy.load(item: item, value: next_value)
+      end
+    end
   end
 
   def __singleton_class
