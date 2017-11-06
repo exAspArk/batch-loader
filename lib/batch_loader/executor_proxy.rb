@@ -6,10 +6,10 @@ class BatchLoader
   class ExecutorProxy
     attr_reader :default_value, :block, :global_executor
 
-    def initialize(default_value, slug, &block)
+    def initialize(default_value, key, &block)
       @default_value = default_value
       @block = block
-      @block_hash_key = slug || block.source_location
+      @block_hash_key = key || block.source_location
       @global_executor = BatchLoader::Executor.ensure_current
     end
 

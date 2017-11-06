@@ -95,8 +95,8 @@ RSpec.describe BatchLoader do
         post: { name: 'Post', ids: [2, 3, 4, 1, 2] },
       }.each do |type, kind|
         kind[:ids].map do |id|
-          items << BatchLoader.for(id, type).batch do |ids, loader, slug|
-            ids.each { |item| loader.call(item, OpenStruct.new({name: slug}.merge({id: item})) ) }
+          items << BatchLoader.for(id).batch(key: type) do |ids, loader, key|
+            ids.each { |item| loader.call(item, OpenStruct.new({name: key}.merge({id: item})) ) }
           end
         end
       end
@@ -116,23 +116,26 @@ RSpec.describe BatchLoader do
       Role.save(id: 4)
       Role.save(id: 5)
 
-      meta_programming = {
-        user: { name: 'User', ids: [1, 2, 3], items: [] },
-        role: { name: 'Role', ids: [1, 2, 4, 5], items: [] },
+      items = {}
+      {
+        user: { name: 'User', ids: [1, 2, 3]},
+        role: { name: 'Role', ids: [1, 2, 4, 5]},
       }.each do |type, kind|
+        items[type] = []
         kind[:ids].map do |id|
-          kind[:items] << BatchLoader.for(id, type, kind).batch do |ids, loader, slug, context|
-            Object.const_get(slug.capitalize).where(id: ids).each { |item| loader.call(item.id, item) }
+          items[type] << BatchLoader.for(id).batch(key: type, context: kind) do |ids, loader, key, contexts|
+            expect(contexts.keys).to eq(ids)
+            expect(contexts.map{|k,v|v[:name]}).to eq(Array.new(ids.size, kind[:name]))
+            Object.const_get(key.capitalize).where(id: ids).each { |item| loader.call(item.id, item) }
           end
         end
       end
 
-      # meta_programming
-      expect(meta_programming).to be_a_kind_of(Hash)
-      expect(meta_programming[:user][:items].size).to eq(3)
-      expect(meta_programming[:user][:items].map(&:id)).to eq([1, 2, 3])
-      expect(meta_programming[:role][:items].size).to eq(4)
-      expect(meta_programming[:role][:items].map(&:id)).to eq([1, 2, 4, 5])
+      expect(items).to be_a_kind_of(Hash)
+      expect(items[:user].size).to eq(3)
+      expect(items[:user].map(&:id)).to eq([1, 2, 3])
+      expect(items[:role].size).to eq(4)
+      expect(items[:role].map(&:id)).to eq([1, 2, 4, 5])
     end
   end
 
@@ -156,7 +159,7 @@ RSpec.describe BatchLoader do
           thread.join
         end
       end
-      slow_executor_proxy = SlowExecutorProxy.new([], &batch_block)
+      slow_executor_proxy = SlowExecutorProxy.new([], nil, &batch_block)
       lazy = BatchLoader.new(item: 1, executor_proxy: slow_executor_proxy).batch(default_value: [], &batch_block)
 
       expect(lazy).to match_array([1, 2])

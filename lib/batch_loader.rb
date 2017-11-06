@@ -14,21 +14,21 @@ class BatchLoader
 
   NoBatchError = Class.new(StandardError)
 
-  def self.for(item, slug = nil, context = nil)
-    new(item: item, slug: slug, context: context)
+  def self.for(item)
+    new(item: item)
   end
 
-  def initialize(item:, slug:, executor_proxy: nil, context:)
-    @context = context || {}
-    @slug = slug
+  def initialize(item:, executor_proxy: nil)
     @item = item
     @__executor_proxy = executor_proxy
   end
 
-  def batch(default_value: nil, cache: true, &batch_block)
+  def batch(default_value: nil, cache: true, key: nil, context: {}, &batch_block)
     @default_value = default_value
     @cache = cache
+    @key = key
     @batch_block = batch_block
+    @context = context
     __executor_proxy.add(item: @item, context: @context)
 
     __singleton_class.class_eval { undef_method(:batch) }
@@ -79,11 +79,10 @@ class BatchLoader
     return if __executor_proxy.value_loaded?(item: @item)
 
     items = __executor_proxy.list_items
-    loader = __loader
-    @batch_block.call(items, loader)
     contexts = __executor_proxy.list_context
+    loader = __loader
 
-    @batch_block.call(items, loader, @slug, contexts)
+    @batch_block.call(items, loader, @key, contexts)
     items.each do |item|
       next if __executor_proxy.value_loaded?(item: item)
       loader.call(item, @default_value)
@@ -133,9 +132,9 @@ class BatchLoader
   end
 
   def __executor_proxy
-    __hash_proxies[@slug] ||= begin
+    __hash_proxies[@key] ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless @batch_block
-      BatchLoader::ExecutorProxy.new(@default_value, @slug, &@batch_block)
+      BatchLoader::ExecutorProxy.new(@default_value, @key, &@batch_block)
     end
   end
 
