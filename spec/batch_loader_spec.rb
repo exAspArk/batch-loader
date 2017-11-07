@@ -87,6 +87,58 @@ RSpec.describe BatchLoader do
     end
   end
 
+  context 'multi load with meta programming' do
+    it 'loads multi items' do
+      items = []
+      {
+        user: { name: 'User', ids: [1, 2, 3, 4, 5] },
+        post: { name: 'Post', ids: [2, 3, 4, 1, 2] },
+      }.each do |type, kind|
+        kind[:ids].map do |id|
+          items << BatchLoader.for(id).batch(key: type) do |ids, loader, key|
+            ids.each { |item| loader.call(item, OpenStruct.new({name: key}.merge({id: item})) ) }
+          end
+        end
+      end
+
+      expect(items.size).to eq(10)
+      expect(items.select { |item| item.name === :user }.map(&:id)).to eq([1, 2, 3, 4, 5])
+      expect(items.select { |item| item.name === :post }.map(&:id)).to eq([2, 3, 4, 1, 2])
+    end
+
+    it 'with query' do
+      User.save(id: 1)
+      User.save(id: 2)
+      User.save(id: 3)
+
+      Role.save(id: 1)
+      Role.save(id: 2)
+      Role.save(id: 4)
+      Role.save(id: 5)
+
+      items = {}
+      {
+        user: { name: 'User', ids: [1, 2, 3]},
+        role: { name: 'Role', ids: [1, 2, 4, 5]},
+      }.each do |type, kind|
+        items[type] = []
+        kind[:ids].map do |id|
+          items[type] << BatchLoader.for(id).batch(key: type, context: kind) do |ids, loader, key, contexts|
+            expect(contexts.keys).to eq(ids)
+            expect(contexts.map{|k,v|v[:name]}).to eq(Array.new(ids.size, kind[:name]))
+            Object.const_get(key.capitalize).where(id: ids).each { |item| loader.call(item.id, item) }
+          end
+        end
+      end
+
+      expect(items).to be_a_kind_of(Hash)
+      expect(items[:user].size).to eq(3)
+      expect(items[:user].map(&:id)).to eq([1, 2, 3])
+      expect(items[:role].size).to eq(4)
+      expect(items[:role].map(&:id)).to eq([1, 2, 4, 5])
+    end
+  end
+
   context 'loader' do
     it 'loads the data even in a separate thread' do
       lazy = BatchLoader.for(1).batch do |nums, loader|
@@ -107,7 +159,7 @@ RSpec.describe BatchLoader do
           thread.join
         end
       end
-      slow_executor_proxy = SlowExecutorProxy.new([], &batch_block)
+      slow_executor_proxy = SlowExecutorProxy.new([], nil, &batch_block)
       lazy = BatchLoader.new(item: 1, executor_proxy: slow_executor_proxy).batch(default_value: [], &batch_block)
 
       expect(lazy).to match_array([1, 2])
