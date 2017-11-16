@@ -38,22 +38,23 @@ class User
   class << self
     def save(id:)
       ensure_init_store
-      @users[id] = new(id: id)
+      @store[self][id] = new(id: id)
     end
 
     def where(id:)
       ensure_init_store
-      @users.each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
+      @store[self].each_with_object([]) { |(k, v), memo| memo << v if id.include?(k) }
     end
 
     def destroy_all
-      @users = {}
+      ensure_init_store
+      @store[self] = {}
     end
 
     private
 
     def ensure_init_store
-      @users ||= {}
+      @store ||= Hash.new { |h, k| h[k] = {} }
     end
   end
 
@@ -72,4 +73,10 @@ class User
   def some_private_method
     :some_private_method
   end
+end
+
+class Author < User
+end
+
+class Reader < User
 end

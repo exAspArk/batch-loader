@@ -23,9 +23,10 @@ class BatchLoader
     @__executor_proxy = executor_proxy
   end
 
-  def batch(default_value: nil, cache: true, &batch_block)
+  def batch(default_value: nil, cache: true, key: nil, &batch_block)
     @default_value = default_value
     @cache = cache
+    @key = key
     @batch_block = batch_block
     __executor_proxy.add(item: @item)
 
@@ -78,7 +79,8 @@ class BatchLoader
 
     items = __executor_proxy.list_items
     loader = __loader
-    @batch_block.call(items, loader)
+    args = {default_value: @default_value, cache: @cache, key: @key}
+    @batch_block.call(items, loader, args)
     items.each do |item|
       next if __executor_proxy.value_loaded?(item: item)
       loader.call(item, @default_value)
@@ -126,7 +128,7 @@ class BatchLoader
   def __executor_proxy
     @__executor_proxy ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless @batch_block
-      BatchLoader::ExecutorProxy.new(@default_value, &@batch_block)
+      BatchLoader::ExecutorProxy.new(@default_value, @key, &@batch_block)
     end
   end
 

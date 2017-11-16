@@ -87,6 +87,26 @@ RSpec.describe BatchLoader do
     end
   end
 
+  context 'with custom key' do
+    it 'batches multiple items by key' do
+      author = Author.save(id: 1)
+      reader = Reader.save(id: 2)
+      batch_loader = ->(type, id) do
+        BatchLoader.for(id).batch(key: type) do |ids, loader, args|
+          args[:key].where(id: ids).each { |user| loader.call(user.id, user) }
+        end
+      end
+
+      laoded_author = batch_loader.call(Author, 1)
+      loader_reader = batch_loader.call(Reader, 2)
+
+      expect(Author).to receive(:where).with(id: [1]).once.and_call_original
+      expect(laoded_author).to eq(author)
+      expect(Reader).to receive(:where).with(id: [2]).once.and_call_original
+      expect(loader_reader).to eq(reader)
+    end
+  end
+
   context 'loader' do
     it 'loads the data even in a separate thread' do
       lazy = BatchLoader.for(1).batch do |nums, loader|
@@ -107,7 +127,7 @@ RSpec.describe BatchLoader do
           thread.join
         end
       end
-      slow_executor_proxy = SlowExecutorProxy.new([], &batch_block)
+      slow_executor_proxy = SlowExecutorProxy.new([], nil, &batch_block)
       lazy = BatchLoader.new(item: 1, executor_proxy: slow_executor_proxy).batch(default_value: [], &batch_block)
 
       expect(lazy).to match_array([1, 2])

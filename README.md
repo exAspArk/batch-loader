@@ -18,8 +18,10 @@ This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTT
   * [RESTful API example](#restful-api-example)
   * [GraphQL example](#graphql-example)
   * [Loading multiple items](#loading-multiple-items)
+  * [Batch key](#batch-key)
   * [Caching](#caching)
 * [Installation](#installation)
+* [API](#api)
 * [Implementation details](#implementation-details)
 * [Development](#development)
 * [Contributing](#contributing)
@@ -300,6 +302,30 @@ BatchLoader.for(user.id).batch(default_value: []) do |comment_ids, loader|
 end
 ```
 
+### Batch key
+
+It's possible to reuse the same `BatchLoader#batch` block for loading different types of data by specifying a unique `key`.
+For example, with polymorphic associations:
+
+```ruby
+def lazy_association(post)
+  id = post.association_id
+  key = post.association_type
+
+  BatchLoader.for(id).batch(key: key) do |ids, loader, args|
+    model = Object.const_get(args[:key])
+    model.where(id: ids).each { |record| record.call(record.id, record) }
+  end
+end
+post1 = Post.save(association_id: 1, association_type: 'Tag')
+post2 = Post.save(association_id: 1, association_type: 'Category')
+
+lazy_association(post1) # SELECT * FROM tags WHERE id IN (1)
+lazy_association(post2) # SELECT * FROM categories WHERE id IN (1)
+```
+
+It's also required to pass custom `key` when using `BatchLoader` with metaprogramming (e.g. `eval`).
+
 ### Caching
 
 By default `BatchLoader` caches the loaded values. You can test it by running something like:
@@ -363,6 +389,24 @@ And then execute:
 Or install it yourself as:
 
     $ gem install batch-loader
+
+## API
+
+```ruby
+BatchLoader.for(item).batch(default_value: default_value, cache: cache, key: key) do |items, loader, args|
+  # ...
+end
+```
+
+| Argument Key    | Default                                       | Description                                                   |
+| --------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| `item`          | -                                             | Item which will be collected and used for batching.           |
+| `default_value` | `nil`                                         | Value returned by default after batching.                     |
+| `cache`         | `true`                                        | Set `false` to disable caching between the same executions.   |
+| `key`           | `nil`                                         | Pass custom key to uniquely identify the batch block.         |
+| `items`         | -                                             | List of collected items for batching.                         |
+| `loader`        | -                                             | Lambda which should be called to load values loaded in batch. |
+| `args`          | `{default_value: nil, cache: true, key: nil}` | Arguments passed to the `batch` method.                       |
 
 ## Implementation details
 
