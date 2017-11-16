@@ -126,8 +126,7 @@ class BatchLoader
   end
 
   def __executor_proxy
-    @__executor_proxies_by_key ||= {}
-    @__executor_proxies_by_key[@key] ||= begin
+    @__executor_proxy ||= begin
       raise NoBatchError.new("Please provide a batch block first") unless @batch_block
       BatchLoader::ExecutorProxy.new(@default_value, @key, &@batch_block)
     end
