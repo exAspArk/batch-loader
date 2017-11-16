@@ -8,9 +8,13 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.1.1...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.2.0...HEAD)
 
 * WIP
+
+#### [v1.2.0](https://github.com/exAspArk/batch-loader/compare/v1.1.1...v1.2.0)
+
+* `Added`: `key` argument for the `BatchLoader#batch` method. [#12](https://github.com/exAspArk/batch-loader/pull/12)
 
 #### [v1.1.1](https://github.com/exAspArk/batch-loader/compare/v1.1.0...v1.1.1)
 
