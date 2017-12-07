@@ -36,7 +36,9 @@ class BatchLoader
   end
 
   def respond_to?(method_name, include_private = false)
-    LEFT_INSTANCE_METHODS.include?(method_name) || method_missing(:respond_to?, method_name, include_private)
+    return true if LEFT_INSTANCE_METHODS.include?(method_name)
+
+    __loaded_value.respond_to?(method_name, include_private)
   end
 
   def inspect
@@ -59,6 +61,11 @@ class BatchLoader
   end
 
   private
+
+  def __loaded_value
+    result = __sync!
+    @cache ? @loaded_value : result
+  end
 
   def method_missing(method_name, *args, &block)
     __sync!.public_send(method_name, *args, &block)

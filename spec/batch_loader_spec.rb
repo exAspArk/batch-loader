@@ -186,22 +186,40 @@ RSpec.describe BatchLoader do
   end
 
   describe '#respond_to?' do
+    let(:user) { User.save(id: 1) }
+    let(:post) { Post.new(user_id: user.id) }
+
+    subject { post.user_lazy }
+
+    it 'syncs the object just once' do
+      loaded_user = post.user_lazy
+
+      expect(loaded_user.respond_to?(:id)).to eq(true)
+    end
+
     it 'returns false for private methods by default' do
-      user = User.save(id: 1)
-      post = Post.new(user_id: user.id)
-
-      batch_loader = post.user_lazy
-
-      expect(batch_loader.respond_to?(:some_private_method)).to eq(false)
+      expect(subject.respond_to?(:some_private_method)).to eq(false)
     end
 
     it 'returns true for private methods if include_private flag is true' do
-      user = User.save(id: 1)
-      post = Post.new(user_id: user.id)
+      expect(subject.respond_to?(:some_private_method, true)).to eq(true)
+    end
 
-      batch_loader = post.user_lazy
+    it 'does not depend on the loaded value #method_missing' do
+      expect(user).not_to receive(:method_missing)
 
-      expect(batch_loader.respond_to?(:some_private_method, true)).to eq(true)
+      expect(subject).to respond_to(:id)
+    end
+
+    context 'when the cache is disabled' do
+      it 'syncs the object on every call' do
+        loaded_user = post.user_lazy(cache: false)
+
+        expect(User).to receive(:where).with(id: [1]).twice.and_call_original
+
+        loaded_user.respond_to?(:id)
+        loaded_user.respond_to?(:id)
+      end
     end
   end
 
