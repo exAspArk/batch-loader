@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/exAspArk/batch-loader.svg?branch=master)](https://travis-ci.org/exAspArk/batch-loader)
 [![Coverage Status](https://coveralls.io/repos/github/exAspArk/batch-loader/badge.svg)](https://coveralls.io/github/exAspArk/batch-loader)
-[![Code Climate](https://img.shields.io/codeclimate/github/exAspArk/batch-loader.svg)](https://codeclimate.com/github/exAspArk/batch-loader)
+[![Code Climate](https://img.shields.io/codeclimate/maintainability/exAspArk/batch-loader.svg)](https://codeclimate.com/github/exAspArk/batch-loader/maintainability)
 [![Downloads](https://img.shields.io/gem/dt/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 [![Latest Version](https://img.shields.io/gem/v/batch-loader.svg)](https://rubygems.org/gems/batch-loader)
 
