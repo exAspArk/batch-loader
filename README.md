@@ -297,7 +297,7 @@ For batches where the value is some kind of collection, such as an Array or Hash
 ```ruby
 BatchLoader.for(user.id).batch(default_value: []) do |comment_ids, loader|
   Comment.where(user_id: user_ids).each do |comment|
-    loader.call(user.id) { |memo| memo << comment }
+    loader.call(comment.user_id) { |memo| memo << comment }
   end
 end
 ```
