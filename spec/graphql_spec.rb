@@ -10,6 +10,7 @@ RSpec.describe 'GraphQL integration' do
       {
         posts {
           user { id }
+          userId
         }
       }
     QUERY
@@ -20,8 +21,8 @@ RSpec.describe 'GraphQL integration' do
 
     expect(result['data']).to eq({
       'posts' => [
-        {'user' => {'id' => "1"}},
-        {'user' => {'id' => "2"}}
+        {'user' => {'id' => "1"}, "userId" => 1},
+        {'user' => {'id' => "2"}, "userId" => 2}
       ]
     })
   end
