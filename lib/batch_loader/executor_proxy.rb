@@ -9,7 +9,7 @@ class BatchLoader
     def initialize(default_value, key, &block)
       @default_value = default_value
       @block = block
-      @block_hash_key = "#{key}#{block.source_location}"
+      @block_hash_key = [block.source_location, key]
       @global_executor = BatchLoader::Executor.ensure_current
     end
 

@@ -1,10 +1,10 @@
 class Post
-  attr_accessor :user_id
+  attr_accessor :user_id, :title
 
   class << self
-    def save(user_id:)
+    def save(user_id:, title: nil)
       ensure_init_store
-      @posts << new(user_id: user_id)
+      new(user_id: user_id, title: title).tap { |post| @posts << post }
     end
 
     def all
@@ -23,8 +23,9 @@ class Post
     end
   end
 
-  def initialize(user_id:)
+  def initialize(user_id:, title: nil)
     self.user_id = user_id
+    self.title = title || "Untitled"
   end
 
   def user_lazy(cache: true)
@@ -66,6 +67,18 @@ class User
 
   def batch
     "Batch from User"
+  end
+
+  def hash
+    [User, id].hash
+  end
+
+  def posts
+    Post.all.select { |p| p.user_id == id }
+  end
+
+  def eql?(other)
+    other.is_a?(User) && id == other.id
   end
 
   private

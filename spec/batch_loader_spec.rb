@@ -97,13 +97,41 @@ RSpec.describe BatchLoader do
         end
       end
 
-      laoded_author = batch_loader.call(Author, 1)
+      loader_author = batch_loader.call(Author, 1)
       loader_reader = batch_loader.call(Reader, 2)
 
       expect(Author).to receive(:where).with(id: [1]).once.and_call_original
-      expect(laoded_author).to eq(author)
+      expect(loader_author).to eq(author)
       expect(Reader).to receive(:where).with(id: [2]).once.and_call_original
       expect(loader_reader).to eq(reader)
+    end
+
+    it 'batches multiple items with hash-identical keys' do
+      user = Author.new(id: 1)
+      same_user = Reader.new(id: 1)
+      other_user = Reader.new(id: 2)
+
+      post_1 = Post.save(user_id: 1, title: "First post")
+      post_2 = Post.save(user_id: 1, title: "Second post")
+      post_3 = Post.save(user_id: 2, title: "First post")
+
+      batch_loader = ->(user, title) do
+        BatchLoader.for(title).batch(key: user) do |titles, loader, args|
+          args[:key].posts.select { |p| titles.include?(p.title) }.each { |post| loader.call(post.title, post) }
+        end
+      end
+
+      loader_1 = batch_loader.call(user, "First post")
+      loader_2 = batch_loader.call(same_user, "Second post")
+      loader_3 = batch_loader.call(other_user, "First post")
+
+      expect(user).to receive(:posts).once.and_call_original
+      expect(same_user).not_to receive(:posts)
+      expect(other_user).to receive(:posts).once.and_call_original
+
+      expect(loader_1).to eq(post_1)
+      expect(loader_2).to eq(post_2)
+      expect(loader_3).to eq(post_3)
     end
   end
 
