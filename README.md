@@ -314,7 +314,7 @@ def lazy_association(post)
 
   BatchLoader.for(id).batch(key: key) do |ids, loader, args|
     model = Object.const_get(args[:key])
-    model.where(id: ids).each { |record| record.call(record.id, record) }
+    model.where(id: ids).each { |record| loader.call(record.id, record) }
   end
 end
 post1 = Post.save(association_id: 1, association_type: 'Tag')
