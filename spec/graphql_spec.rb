@@ -10,19 +10,19 @@ RSpec.describe 'GraphQL integration' do
       {
         posts {
           user { id }
-          userId
+          userOld { id }
         }
       }
     QUERY
 
-    expect(User).to receive(:where).with(id: ["1", "2"]).once.and_call_original
+    expect(User).to receive(:where).with(id: ["1", "2"]).twice.and_call_original
 
     result = GraphqlSchema.execute(query)
 
     expect(result['data']).to eq({
       'posts' => [
-        {'user' => {'id' => "1"}, "userId" => 1},
-        {'user' => {'id' => "2"}, "userId" => 2}
+        {'user' => {'id' => "1"}, 'userOld' => {'id' => "1"}},
+        {'user' => {'id' => "2"}, 'userOld' => {'id' => "2"}}
       ]
     })
   end
