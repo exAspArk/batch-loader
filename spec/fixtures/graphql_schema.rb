@@ -7,10 +7,15 @@ when '1_7'
 
   PostType = GraphQL::ObjectType.define do
     name "Post"
-    field :user, !UserType, resolve: ->(object, args, ctx) { object.user_lazy }
-    field :userId, !types.Int, resolve: ->(object, args, ctx) do
-      BatchLoader.for(object).batch do |posts, loader|
-        posts.each { |p| loader.call(p, p.user_lazy.id) }
+    field :user, !UserType, resolve: ->(object, args, ctx) do
+      BatchLoader::GraphQL.for(object.user_id).batch do |user_ids, loader|
+        User.where(id: user_ids).each { |user| loader.call(user.id, user) }
+      end
+    end
+
+    field :userOld, !UserType, resolve: ->(object, args, ctx) do
+      BatchLoader.for(object.user_id).batch do |user_ids, loader|
+        User.where(id: user_ids).each { |user| loader.call(user.id, user) }
       end
     end
   end
@@ -31,15 +36,17 @@ when '1_8'
 
   class PostType < GraphQL::Schema::Object
     field :user, UserType, null: false
-    field :user_id, Int, null: false
+    field :user_old, UserType, null: false
 
     def user
-      object.user_lazy
+      BatchLoader::GraphQL.for(object.user_id).batch do |user_ids, loader|
+        User.where(id: user_ids).each { |user| loader.call(user.id, user) }
+      end
     end
 
-    def user_id
-      BatchLoader.for(object).batch do |posts, loader|
-        posts.each { |p| loader.call(p, p.user_lazy.id) }
+    def user_old
+      BatchLoader.for(object.user_id).batch do |user_ids, loader|
+        User.where(id: user_ids).each { |user| loader.call(user.id, user) }
       end
     end
   end

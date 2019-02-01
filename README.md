@@ -258,13 +258,13 @@ query = "
 Schema.execute(query)
 ```
 
-To avoid this problem, all we have to do is to change the resolver to return `BatchLoader`:
+To avoid this problem, all we have to do is to change the resolver to return `BatchLoader::GraphQL` ([#32](https://github.com/exAspArk/batch-loader/pull/32) explains why not just `BatchLoader`):
 
 ```ruby
 PostType = GraphQL::ObjectType.define do
   name "Post"
   field :user, !UserType, resolve: ->(post, args, ctx) do
-    BatchLoader.for(post.user_id).batch do |user_ids, loader|
+    BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
       User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end

@@ -84,7 +84,6 @@ class User
   private
 
   def some_private_method
-    :some_private_method
   end
 end
 
