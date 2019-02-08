@@ -97,10 +97,10 @@ class BatchLoader
 
   def __loader
     mutex = Mutex.new
-    -> (item, value = (no_value = true; nil), &block) do
-      if no_value && !block
-        raise ArgumentError, "Please pass a value or a block"
-      elsif block && !no_value
+    -> (item, value = nil, &block) do
+      if !item
+        raise ArgumentError, "Please pass an item"
+      elsif block && value
         raise ArgumentError, "Please pass a value or a block, not both"
       end
 

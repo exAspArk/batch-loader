@@ -191,9 +191,9 @@ RSpec.describe BatchLoader do
       expect { lazy.sync }.to raise_error(ArgumentError)
     end
 
-    it 'raises ArgumentError if called without block and value' do
+    it 'raises ArgumentError if called without an item' do
       lazy = BatchLoader.for(1).batch do |nums, loader|
-        nums.each { |num| loader.call(num) }
+        nums.each { |_| loader.call }
       end
 
       expect { lazy.sync }.to raise_error(ArgumentError)
