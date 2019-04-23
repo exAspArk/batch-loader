@@ -8,8 +8,8 @@ require_relative "./batch_loader/middleware"
 require_relative "./batch_loader/graphql"
 
 class BatchLoader
-  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect].freeze
-  REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
+  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect cache].freeze
+  REPLACABLE_INSTANCE_METHODS = %i[batch inspect cache].freeze
   LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
 
   NoBatchError = Class.new(StandardError)
@@ -33,6 +33,16 @@ class BatchLoader
     __singleton_class.class_eval { undef_method(:batch) }
 
     self
+  end
+
+  def cache(&cache_block)
+    @batch_block = cache_block
+
+    if __executor_proxy.value_loaded?(item: @item)
+      __executor_proxy.loaded_value(item: @item)
+    else
+      __executor_proxy.load(item: @item, value: @batch_block.call())
+    end
   end
 
   def respond_to?(method_name, include_private = false)

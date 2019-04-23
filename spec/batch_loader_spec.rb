@@ -292,4 +292,22 @@ RSpec.describe BatchLoader do
       expect { result.to_s }.to raise_error("Oops")
     end
   end
+
+  describe '#cache' do
+    it 'caches the value in the current thread' do
+      @executed_times = 0
+      def run_test(key)
+        BatchLoader.for(key).cache do
+          @executed_times += 1
+          :bar
+        end
+      end
+      run_test(:foo)
+
+      result = run_test(:foo)
+
+      expect(result).to eq(:bar)
+      expect(@executed_times).to eq(1)
+    end
+  end
 end
