@@ -28,8 +28,8 @@ class Post
     self.title = title || "Untitled"
   end
 
-  def user_lazy(cache: true)
-    BatchLoader.for(user_id).batch(cache: cache) do |user_ids, loader|
+  def user_lazy(**opts)
+    BatchLoader.for(user_id).batch(**opts) do |user_ids, loader|
       User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end

@@ -10,7 +10,7 @@ that you can set version constraints properly.
 
 #### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.3.0...HEAD)
 
-* WIP
+* `Added`: new `replace_methods` argument to `BatchLoader#batch` to allow control over `define_method` calls
 
 #### [v1.3.0](https://github.com/exAspArk/batch-loader/compare/v1.2.2...v1.3.0)
 

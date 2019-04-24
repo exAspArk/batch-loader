@@ -239,9 +239,9 @@ RSpec.describe BatchLoader do
       expect(subject).to respond_to(:id)
     end
 
-    context 'when the cache is disabled' do
+    context 'when the cache and method replacement is disabled' do
       it 'syncs the object on every call' do
-        loaded_user = post.user_lazy(cache: false)
+        loaded_user = post.user_lazy(cache: false, replace_methods: false)
 
         expect(User).to receive(:where).with(id: [1]).twice.and_call_original
 
@@ -273,15 +273,25 @@ RSpec.describe BatchLoader do
       expect(post.user_lazy(cache: false)).to eq(user2)
     end
 
-    it 'works without cache for the same BatchLoader instance' do
+    it 'works without cache and method replacement for the same BatchLoader instance' do
       user = User.save(id: 1)
       post = Post.new(user_id: user.id)
-      user_lazy = post.user_lazy(cache: false)
+      user_lazy = post.user_lazy(cache: false, replace_methods: false)
 
       expect(User).to receive(:where).with(id: [1]).twice.and_call_original
 
       expect(user_lazy).to eq(user)
       expect(user_lazy).to eq(user)
+    end
+
+    it 'does not replace methods when replace_methods is false' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+      user_lazy = post.user_lazy(cache: true, replace_methods: false)
+
+      expect(user_lazy).to receive(:method_missing).and_call_original
+
+      user_lazy.id
     end
 
     it 'raises the error if something went wrong in the batch' do
