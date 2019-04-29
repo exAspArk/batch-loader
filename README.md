@@ -379,10 +379,13 @@ If you set `cache: false`, it's likely you also want `replace_methods: false` (s
 
 ### Replacing methods
 
-By default, using the cache will also replace methods on the `BatchLoader` instance by calling `#define_method` to copy methods from the loaded value. In some cases, this can be slower than using the naive `#method_missing` implementation when caching is disabled. To keep caching but disable method replacement, set:
+By default, `BatchLoader` replaces methods on its instance by calling `#define_method` after batching to copy methods from the loaded value.
+This consumes some time but allows to speed up any future method calls on the instance.
+In some cases, when there are a lot of instances with a huge number of defined methods, this initial process of replacing the methods can be slow.
+You may consider avoiding the "up front payment" and "pay as you go" with `#method_missing` by disabling the method replacement:
 
 ```ruby
-BatchLoader.for(id).batch(cache: true, replace_methods: false) do |ids, loader|
+BatchLoader.for(id).batch(replace_methods: false) do |ids, loader|
   # ...
 end
 ```
@@ -406,23 +409,26 @@ Or install it yourself as:
 ## API
 
 ```ruby
-BatchLoader
-  .for(item)
-  .batch(default_value: default_value, cache: cache, replace_methods: replace_methods, key: key) do |items, loader, args|
+BatchLoader.for(item).batch(
+  default_value: default_value,
+  cache: cache,
+  replace_methods: replace_methods,
+  key: key
+) do |items, loader, args|
   # ...
 end
 ```
 
-| Argument Key      | Default                                                              | Description                                                                            |
-| ---------------   | ---------------------------------------------                        | -------------------------------------------------------------                          |
-| `item`            | -                                                                    | Item which will be collected and used for batching.                                    |
-| `default_value`   | `nil`                                                                | Value returned by default after batching.                                              |
-| `cache`           | `true`                                                               | Set `false` to disable caching between the same executions.                            |
-| `replace_methods` | `true`                                                               | Set `false` to always use `#method_missing` to respond to methods on the loaded value. |
-| `key`             | `nil`                                                                | Pass custom key to uniquely identify the batch block.                                  |
-| `items`           | -                                                                    | List of collected items for batching.                                                  |
-| `loader`          | -                                                                    | Lambda which should be called to load values loaded in batch.                          |
-| `args`            | `{default_value: nil, cache: true, replace_methods: true, key: nil}` | Arguments passed to the `batch` method.                                                |
+| Argument Key      | Default                                                              | Description                                                                           |
+| ---------------   | ---------------------------------------------                        | -------------------------------------------------------------                         |
+| `item`            | -                                                                    | Item which will be collected and used for batching.                                   |
+| `default_value`   | `nil`                                                                | Value returned by default after batching.                                             |
+| `cache`           | `true`                                                               | Set `false` to disable caching between the same executions.                           |
+| `replace_methods` | `true`                                                               | Set `false` to use `#method_missing` instead of replacing the methods after batching. |
+| `key`             | `nil`                                                                | Pass custom key to uniquely identify the batch block.                                 |
+| `items`           | -                                                                    | List of collected items for batching.                                                 |
+| `loader`          | -                                                                    | Lambda which should be called to load values loaded in batch.                         |
+| `args`            | `{default_value: nil, cache: true, replace_methods: true, key: nil}` | Arguments passed to the `batch` method.                                               |
 
 ## Implementation details
 
