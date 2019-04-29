@@ -20,6 +20,7 @@ This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTT
   * [Loading multiple items](#loading-multiple-items)
   * [Batch key](#batch-key)
   * [Caching](#caching)
+  * [Replacing methods](#replacing-methods)
 * [Installation](#installation)
 * [API](#api)
 * [Implementation details](#implementation-details)
@@ -374,6 +375,18 @@ puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
 puts user_lazy(1) # SELECT * FROM users WHERE id IN (1)
 ```
 
+If you set `cache: false`, it's likely you also want `replace_methods: false` (see below section).
+
+### Replacing methods
+
+By default, using the cache will also replace methods on the `BatchLoader` instance by calling `#define_method` to copy methods from the loaded value. In some cases, this can be slower than using the naive `#method_missing` implementation when caching is disabled. To keep caching but disable method replacement, set:
+
+```ruby
+BatchLoader.for(id).batch(cache: true, replace_methods: false) do |ids, loader|
+  # ...
+end
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -393,20 +406,23 @@ Or install it yourself as:
 ## API
 
 ```ruby
-BatchLoader.for(item).batch(default_value: default_value, cache: cache, key: key) do |items, loader, args|
+BatchLoader
+  .for(item)
+  .batch(default_value: default_value, cache: cache, replace_methods: replace_methods, key: key) do |items, loader, args|
   # ...
 end
 ```
 
-| Argument Key    | Default                                       | Description                                                   |
-| --------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| `item`          | -                                             | Item which will be collected and used for batching.           |
-| `default_value` | `nil`                                         | Value returned by default after batching.                     |
-| `cache`         | `true`                                        | Set `false` to disable caching between the same executions.   |
-| `key`           | `nil`                                         | Pass custom key to uniquely identify the batch block.         |
-| `items`         | -                                             | List of collected items for batching.                         |
-| `loader`        | -                                             | Lambda which should be called to load values loaded in batch. |
-| `args`          | `{default_value: nil, cache: true, key: nil}` | Arguments passed to the `batch` method.                       |
+| Argument Key      | Default                                                              | Description                                                                            |
+| ---------------   | ---------------------------------------------                        | -------------------------------------------------------------                          |
+| `item`            | -                                                                    | Item which will be collected and used for batching.                                    |
+| `default_value`   | `nil`                                                                | Value returned by default after batching.                                              |
+| `cache`           | `true`                                                               | Set `false` to disable caching between the same executions.                            |
+| `replace_methods` | `true`                                                               | Set `false` to always use `#method_missing` to respond to methods on the loaded value. |
+| `key`             | `nil`                                                                | Pass custom key to uniquely identify the batch block.                                  |
+| `items`           | -                                                                    | List of collected items for batching.                                                  |
+| `loader`          | -                                                                    | Lambda which should be called to load values loaded in batch.                          |
+| `args`            | `{default_value: nil, cache: true, replace_methods: true, key: nil}` | Arguments passed to the `batch` method.                                                |
 
 ## Implementation details
 

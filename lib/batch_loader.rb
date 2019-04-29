@@ -23,11 +23,13 @@ class BatchLoader
     @__executor_proxy = executor_proxy
   end
 
-  def batch(default_value: nil, cache: true, key: nil, &batch_block)
+  def batch(default_value: nil, cache: true, replace_methods: true, key: nil, &batch_block)
     @default_value = default_value
     @cache = cache
+    @replace_methods = replace_methods
     @key = key
     @batch_block = batch_block
+
     __executor_proxy.add(item: @item)
 
     __singleton_class.class_eval { undef_method(:batch) }
@@ -74,7 +76,7 @@ class BatchLoader
   def __sync!
     loaded_value = __sync
 
-    if @cache
+    if @replace_methods
       __replace_with!(loaded_value)
     else
       loaded_value
@@ -86,7 +88,7 @@ class BatchLoader
 
     items = __executor_proxy.list_items
     loader = __loader
-    args = {default_value: @default_value, cache: @cache, key: @key}
+    args = {default_value: @default_value, cache: @cache, replace_methods: @replace_methods, key: @key}
     @batch_block.call(items, loader, args)
     items.each do |item|
       next if __executor_proxy.value_loaded?(item: item)
