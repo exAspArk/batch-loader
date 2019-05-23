@@ -8,6 +8,20 @@
 
 This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTTP queries, etc.
 
+Developers from these companies use `BatchLoader`:
+
+<a href="https://about.gitlab.com/"><img src="images/gitlab.png" height="35" width="114" alt="GitLab" style="max-width:100%;"></a>
+<img src="images/space.png" height="35" width="10" alt="" style="max-width:100%;">
+<a href="https://www.netflix.com/"><img src="images/netflix.png" height="35" width="110" alt="Netflix" style="max-width:100%;"></a>
+<img src="images/space.png" height="35" width="10" alt="" style="max-width:100%;">
+<a href="https://www.alibaba.com/"><img src="images/alibaba.png" height="35" width="86" alt="Alibaba" style="max-width:100%;"></a>
+<img src="images/space.png" height="35" width="10" alt="" style="max-width:100%;">
+<a href="https://www.universe.com/"><img src="images/universe.png" height="35" width="137" alt="Universe" style="max-width:100%;"></a>
+<img src="images/space.png" height="35" width="10" alt="" style="max-width:100%;">
+<a href="https://www.wealthsimple.com/"><img src="images/wealthsimple.png" height="35" width="150" alt="Wealthsimple" style="max-width:100%;"></a>
+<img src="images/space.png" height="35" width="10" alt="" style="max-width:100%;">
+<a href="https://decidim.org/"><img src="images/decidim.png" height="35" width="94" alt="Decidim" style="max-width:100%;"></a>
+
 ## Contents
 
 * [Highlights](#highlights)
@@ -25,14 +39,11 @@ This gem provides a generic lazy batching mechanism to avoid N+1 DB queries, HTT
 * [API](#api)
 * [Implementation details](#implementation-details)
 * [Development](#development)
+* [Related gems](#related-gems)
 * [Contributing](#contributing)
 * [Alternatives](#alternatives)
 * [License](#license)
 * [Code of Conduct](#code-of-conduct)
-
-<a href="https://www.universe.com/" target="_blank" rel="noopener noreferrer">
-  <img src="images/universe.png" height="41" width="153" alt="Sponsored by Universe" style="max-width:100%;">
-</a>
 
 ## Highlights
 
@@ -439,6 +450,14 @@ See the [slides](https://speakerdeck.com/exaspark/batching-a-powerful-way-to-sol
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
+## Related gems
+
+These gems are built by using `BatchLoader`:
+
+* [decidim-core](https://github.com/decidim/decidim/) – participatory democracy framework made with Ruby on Rails.
+* [ams_lazy_relationships](https://github.com/Bajena/ams_lazy_relationships/) – ActiveModel Serializers add-on for eliminating N+1 queries.
+* [batch-loader-active-record](https://github.com/mathieul/batch-loader-active-record/) – ActiveRecord lazy association generator to avoid N+1 DB queries.
 
 ## Contributing
 
