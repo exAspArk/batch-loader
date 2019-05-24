@@ -1,6 +1,6 @@
 sudo: false
 language: ruby
-before_install: gem install bundler -v 1.17.1
+before_install: gem install bundler -v 2.0.1
 matrix:
   include:
     - gemfile: graphql-1.7.gemfile
