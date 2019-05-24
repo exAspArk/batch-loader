@@ -294,6 +294,14 @@ RSpec.describe BatchLoader do
       user_lazy.id
     end
 
+    it 'does not allow mutating a list of items' do
+      batch_loader = BatchLoader.for(1).batch do |items, loader|
+        items.map! { |i| i - 1 }
+      end
+
+      expect { batch_loader.to_s }.to raise_error(RuntimeError, "can't modify frozen Array")
+    end
+
     it 'raises the error if something went wrong in the batch' do
       result = BatchLoader.for(1).batch { |ids, loader| raise "Oops" }
       # should work event with Pry which currently shallows errors on #inspect call https://github.com/pry/pry/issues/1642

@@ -18,7 +18,7 @@ class BatchLoader
     end
 
     def list_items
-      items_to_load.to_a
+      items_to_load.to_a.freeze
     end
 
     def delete(items:)
