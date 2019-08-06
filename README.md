@@ -291,6 +291,13 @@ Schema = GraphQL::Schema.define do
   use BatchLoader::GraphQL
 end
 ```
+or, using the class-based (introduced in graphql-ruby in version 1.8) way of defining a schema:
+```
+ class GraphqlSchema < GraphQL::Schema
+   query QueryType
+   use BatchLoader::GraphQL
+ end
+```
 
 That's it.
 
