@@ -292,7 +292,7 @@ Schema = GraphQL::Schema.define do
 end
 ```
 or, using the class-based (introduced in graphql-ruby in version 1.8) way of defining a schema:
-```
+```ruby
  class GraphqlSchema < GraphQL::Schema
    query QueryType
    use BatchLoader::GraphQL
