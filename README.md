@@ -296,10 +296,10 @@ end
 And setup GraphQL to use the built-in `lazy_resolve` method:
 
 ```ruby
- class GraphqlSchema < GraphQL::Schema
-   query QueryType
-   use BatchLoader::GraphQL
- end
+class GraphqlSchema < GraphQL::Schema
+  query QueryType
+  use BatchLoader::GraphQL
+end
 ```
 
 That's it.
