@@ -244,21 +244,27 @@ end
 
 module Types
   class QueryType < Types::BaseObject
-    field :posts, !types[PostType], resolve: ->(obj, args, ctx) { Post.all }
+    field :posts, ![PostType]
+    def posts
+      Post.all
+    end
   end
 end
 
 module Types
   class PostType < Types::BaseObject
     name "Post"
-    field :user, !UserType, resolve: ->(post, args, ctx) { post.user } # N+1 queries
+    field :user, !UserType
+    def user
+      post.user
+    end # N+1 queries
   end
 end
 
 module Types
   class UserType < Types::BaseObject
     name "User"
-    field :name, !types.String
+    field :name, !String
   end
 end
 ```
@@ -284,7 +290,9 @@ To avoid this problem, all we have to do is to change the resolver to return `Ba
 module Types
   class PostType < Types::BaseObject
     name "Post"
-    field :user, !UserType, resolve: ->(post, args, ctx) do
+    field :user, !UserType
+
+    def user
       BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
         User.where(id: user_ids).each { |user| loader.call(user.id, user) }
       end
