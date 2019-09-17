@@ -236,10 +236,7 @@ Let's take a look at the simple [graphql-ruby](https://github.com/rmosolgo/graph
 
 ```ruby
 class MyProjectSchema < GraphQL::Schema
-  mutation(Types::MutationType)
   query(Types::QueryType)
-
-  use BatchLoader::GraphQL
 end
 
 module Types
@@ -305,7 +302,7 @@ And setup GraphQL to use the built-in `lazy_resolve` method:
 
 ```ruby
 class MyProjectSchema < GraphQL::Schema
-  query QueryType
+  query(Types::QueryType)
   use BatchLoader::GraphQL
 end
 ```
