@@ -235,7 +235,7 @@ Batching is particularly useful with GraphQL. Using such techniques as preloadin
 Let's take a look at the simple [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) schema example:
 
 ```ruby
-class MyprojectSchema < GraphQL::Schema
+class MyProjectSchema < GraphQL::Schema
   mutation(Types::MutationType)
   query(Types::QueryType)
 
@@ -244,7 +244,7 @@ end
 
 module Types
   class QueryType < Types::BaseObject
-    field :posts, ![PostType]
+    field :posts, [PostType], null: false
     def posts
       Post.all
     end
@@ -254,7 +254,7 @@ end
 module Types
   class PostType < Types::BaseObject
     name "Post"
-    field :user, !UserType
+    field :user, UserType, null: false
     def user
       post.user
     end # N+1 queries
@@ -264,7 +264,7 @@ end
 module Types
   class UserType < Types::BaseObject
     name "User"
-    field :name, !String
+    field :name, String, null: false
   end
 end
 ```
@@ -290,7 +290,7 @@ To avoid this problem, all we have to do is to change the resolver to return `Ba
 module Types
   class PostType < Types::BaseObject
     name "Post"
-    field :user, !UserType
+    field :user, UserType, null: false
 
     def user
       BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
@@ -304,7 +304,7 @@ end
 And setup GraphQL to use the built-in `lazy_resolve` method:
 
 ```ruby
-class GraphqlSchema < GraphQL::Schema
+class MyProjectSchema < GraphQL::Schema
   query QueryType
   use BatchLoader::GraphQL
 end
