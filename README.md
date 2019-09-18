@@ -304,7 +304,7 @@ BatchLoader.for(post.user_id).batch(default_value: NullUser.new) do |user_ids, l
 end
 ```
 
-For batches where the value is some kind of collection, such as an Array or Hash, `loader` also supports being called with a block, which yields the _current_ value, and returns the _next_ value. This is extremely useful for 1:Many relationships:
+For batches where the value is some kind of collection, such as an Array or Hash, `loader` also supports being called with a block, which yields the _current_ value, and returns the _next_ value. This is extremely useful for 1:Many (`has_many`) relationships:
 
 ```ruby
 BatchLoader.for(user.id).batch(default_value: []) do |user_ids, loader|
