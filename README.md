@@ -235,23 +235,34 @@ Batching is particularly useful with GraphQL. Using such techniques as preloadin
 Let's take a look at the simple [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) schema example:
 
 ```ruby
-Schema = GraphQL::Schema.define do
-  query QueryType
+class MyProjectSchema < GraphQL::Schema
+  query(Types::QueryType)
 end
 
-QueryType = GraphQL::ObjectType.define do
-  name "Query"
-  field :posts, !types[PostType], resolve: ->(obj, args, ctx) { Post.all }
+module Types
+  class QueryType < Types::BaseObject
+    field :posts, [PostType], null: false
+    def posts
+      Post.all
+    end
+  end
 end
 
-PostType = GraphQL::ObjectType.define do
-  name "Post"
-  field :user, !UserType, resolve: ->(post, args, ctx) { post.user } # N+1 queries
+module Types
+  class PostType < Types::BaseObject
+    name "Post"
+    field :user, UserType, null: false
+    def user
+      post.user
+    end # N+1 queries
+  end
 end
 
-UserType = GraphQL::ObjectType.define do
-  name "User"
-  field :name, !types.String
+module Types
+  class UserType < Types::BaseObject
+    name "User"
+    field :name, String, null: false
+  end
 end
 ```
 
@@ -273,11 +284,15 @@ Schema.execute(query)
 To avoid this problem, all we have to do is to change the resolver to return `BatchLoader::GraphQL` ([#32](https://github.com/exAspArk/batch-loader/pull/32) explains why not just `BatchLoader`):
 
 ```ruby
-PostType = GraphQL::ObjectType.define do
-  name "Post"
-  field :user, !UserType, resolve: ->(post, args, ctx) do
-    BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
-      User.where(id: user_ids).each { |user| loader.call(user.id, user) }
+module Types
+  class PostType < Types::BaseObject
+    name "Post"
+    field :user, UserType, null: false
+
+    def user
+      BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
+        User.where(id: user_ids).each { |user| loader.call(user.id, user) }
+      end
     end
   end
 end
@@ -286,8 +301,8 @@ end
 And setup GraphQL to use the built-in `lazy_resolve` method:
 
 ```ruby
-Schema = GraphQL::Schema.define do
-  query QueryType
+class MyProjectSchema < GraphQL::Schema
+  query(Types::QueryType)
   use BatchLoader::GraphQL
 end
 ```
