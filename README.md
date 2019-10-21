@@ -37,9 +37,9 @@ Developers from these companies use `BatchLoader`:
   * [Replacing methods](#replacing-methods)
 * [Installation](#installation)
 * [API](#api)
+* [Related tools](#related-tools)
 * [Implementation details](#implementation-details)
 * [Development](#development)
-* [Related gems](#related-gems)
 * [Contributing](#contributing)
 * [Alternatives](#alternatives)
 * [License](#license)
@@ -461,6 +461,18 @@ end
 | `loader`          | -                                                                    | Lambda which should be called to load values loaded in batch.                         |
 | `args`            | `{default_value: nil, cache: true, replace_methods: true, key: nil}` | Arguments passed to the `batch` method.                                               |
 
+## Related tools
+
+These gems are built by using `BatchLoader`:
+
+* [decidim-core](https://github.com/decidim/decidim/) – participatory democracy framework made with Ruby on Rails.
+* [ams_lazy_relationships](https://github.com/Bajena/ams_lazy_relationships/) – ActiveModel Serializers add-on for eliminating N+1 queries.
+* [batch-loader-active-record](https://github.com/mathieul/batch-loader-active-record/) – ActiveRecord lazy association generator to avoid N+1 DB queries.
+
+`BatchLoader` in other programming languages:
+
+* [batch_loader](https://github.com/exaspark/batch_loader) - Elixir implementation.
+
 ## Implementation details
 
 See the [slides](https://speakerdeck.com/exaspark/batching-a-powerful-way-to-solve-n-plus-1-queries) [37-42].
@@ -470,14 +482,6 @@ See the [slides](https://speakerdeck.com/exaspark/batching-a-powerful-way-to-sol
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Related gems
-
-These gems are built by using `BatchLoader`:
-
-* [decidim-core](https://github.com/decidim/decidim/) – participatory democracy framework made with Ruby on Rails.
-* [ams_lazy_relationships](https://github.com/Bajena/ams_lazy_relationships/) – ActiveModel Serializers add-on for eliminating N+1 queries.
-* [batch-loader-active-record](https://github.com/mathieul/batch-loader-active-record/) – ActiveRecord lazy association generator to avoid N+1 DB queries.
 
 ## Contributing
 
