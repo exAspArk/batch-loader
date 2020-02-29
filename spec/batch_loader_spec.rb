@@ -299,7 +299,7 @@ RSpec.describe BatchLoader do
         items.map! { |i| i - 1 }
       end
 
-      expect { batch_loader.to_s }.to raise_error(RuntimeError, "can't modify frozen Array")
+      expect { batch_loader.to_s }.to raise_error(RuntimeError, /\Acan't modify frozen Array/)
     end
 
     it 'raises the error if something went wrong in the batch' do
