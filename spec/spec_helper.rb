@@ -1,7 +1,5 @@
 require "bundler/setup"
 
-ENV['GRAPHQL_RUBY_VERSION'] ||= '1_8'
-
 if ENV['CI']
   require 'coveralls'
   Coveralls.wear!
