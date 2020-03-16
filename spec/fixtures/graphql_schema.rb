@@ -1,5 +1,6 @@
-case ENV['GRAPHQL_RUBY_VERSION']
-when '1_7'
+graphql_ruby_version = Gem::Version.new(GraphQL::VERSION)
+
+if graphql_ruby_version < Gem::Version.new('1.8')
   UserType = GraphQL::ObjectType.define do
     name "User"
     field :id, !types.ID
@@ -29,7 +30,7 @@ when '1_7'
     query QueryType
     use BatchLoader::GraphQL
   end
-when '1_8'
+elsif
   class UserType < GraphQL::Schema::Object
     field :id, ID, null: false
   end
