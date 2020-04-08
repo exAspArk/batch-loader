@@ -64,4 +64,13 @@ elsif
     query QueryType
     use BatchLoader::GraphQL
   end
+
+  if defined?(GraphQL::Execution::Interpreter)
+    class GraphqlSchemaWithInterpreter < GraphQL::Schema
+      use GraphQL::Execution::Interpreter
+      use GraphQL::Analysis::AST
+      query QueryType
+      use BatchLoader::GraphQL
+    end
+  end
 end

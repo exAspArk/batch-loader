@@ -4,15 +4,29 @@ class BatchLoader
   class GraphQL
     def self.use(schema_definition)
       schema_definition.lazy_resolve(BatchLoader::GraphQL, :sync)
-      # for graphql gem versions <= 1.8.6 which work with BatchLoader instead of BatchLoader::GraphQL
-      schema_definition.instrument(:field, self)
+
+      # in cases when BatchLoader is being used instead of BatchLoader::GraphQL
+      if schema_definition.respond_to?(:interpreter?) && schema_definition.interpreter?
+        schema_definition.tracer(self)
+      else
+        schema_definition.instrument(:field, self)
+      end
+    end
+
+    def self.trace(event, _data)
+      if event == 'execute_field'
+        result = yield
+        result.respond_to?(:__sync) ? wrap(result) : result
+      else
+        yield
+      end
     end
 
     def self.instrument(type, field)
       old_resolve_proc = field.resolve_proc
       new_resolve_proc = ->(object, arguments, context) do
         result = old_resolve_proc.call(object, arguments, context)
-        result.respond_to?(:__sync) ? BatchLoader::GraphQL.wrap(result) : result
+        result.respond_to?(:__sync) ? wrap(result) : result
       end
 
       field.redefine { resolve(new_resolve_proc) }
