@@ -16,7 +16,7 @@ class BatchLoader
     def self.trace(event, _data)
       if event == 'execute_field'
         result = yield
-        result.respond_to?(:__sync) ? wrap(result) : result
+        result.respond_to?(:__sync) ? wrap_with_warning(result) : result
       else
         yield
       end
@@ -26,11 +26,17 @@ class BatchLoader
       old_resolve_proc = field.resolve_proc
       new_resolve_proc = ->(object, arguments, context) do
         result = old_resolve_proc.call(object, arguments, context)
-        result.respond_to?(:__sync) ? wrap(result) : result
+        result.respond_to?(:__sync) ? wrap_with_warning(result) : result
       end
 
       field.redefine { resolve(new_resolve_proc) }
     end
+
+    def self.wrap_with_warning(batch_loader)
+      warn "DEPRECATION WARNING: using BatchLoader.for in GraphQL is deprecated. Use BatchLoader::GraphQL.for instead or return BatchLoader::GraphQL.wrap from your resolver."
+      wrap(batch_loader)
+    end
+    private_class_method :wrap_with_warning
 
     def self.wrap(batch_loader)
       BatchLoader::GraphQL.new.tap do |graphql|
