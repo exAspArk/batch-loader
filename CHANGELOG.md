@@ -12,6 +12,35 @@ that you can set version constraints properly.
 
 * WIP
 
+#### [v1.5.0](https://github.com/exAspArk/batch-loader/compare/v1.4.1...v1.5.0)
+
+* `Added`: Support for GraphQL Interpreter. [#62](https://github.com/exAspArk/batch-loader/pull/62)
+* `Deprecated`: `BatchLoader.for` in GraphQL. [#62](https://github.com/exAspArk/batch-loader/pull/62)
+
+Please use `BatchLoader::GraphQL.for` instead:
+
+```rb
+field :user, UserType, null: false
+
+def user # resolver
+  BatchLoader::GraphQL.for...
+end
+```
+
+Or wrap a BatchLoader instance with `BatchLoader::GraphQL.wrap`:
+
+```rb
+field :user, UserType, null: false
+
+def user # resolver
+  BatchLoader::GraphQL.wrap(lazy_user)
+end
+
+def lazy_user
+  BatchLoader.for...
+end
+```
+
 #### [v1.4.1](https://github.com/exAspArk/batch-loader/compare/v1.4.0...v1.4.1)
 
 * `Fixes`: Does not allow mutating and corrupting a list of items in a `batch` block. [#46](https://github.com/exAspArk/batch-loader/pull/46)
