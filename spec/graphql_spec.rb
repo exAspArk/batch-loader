@@ -1,7 +1,22 @@
 require "spec_helper"
 
 RSpec.describe 'GraphQL integration' do
+  after do
+    User.destroy_all
+    Post.destroy_all
+  end
+
   it 'resolves BatchLoader fields lazily' do
+    test(GraphqlSchema)
+  end
+
+  if defined?(GraphqlSchemaWithInterpreter)
+    it 'resolves BatchLoader fields lazily with GraphQL Interpreter' do
+      test(GraphqlSchemaWithInterpreter)
+    end
+  end
+
+  def test(schema)
     user1 = User.save(id: "1")
     user2 = User.save(id: "2")
     Post.save(user_id: user1.id)
@@ -17,7 +32,7 @@ RSpec.describe 'GraphQL integration' do
 
     expect(User).to receive(:where).with(id: ["1", "2"]).twice.and_call_original
 
-    result = GraphqlSchema.execute(query)
+    result = schema.execute(query)
 
     expect(result['data']).to eq({
       'posts' => [
