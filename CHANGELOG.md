@@ -8,7 +8,7 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.4.1...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v1.5.0...HEAD)
 
 * WIP
 
