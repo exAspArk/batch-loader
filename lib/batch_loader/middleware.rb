@@ -7,6 +7,8 @@ class BatchLoader
     end
 
     def call(env)
+      BatchLoader::Executor.clear_current
+
       begin
         @app.call(env)
       ensure
