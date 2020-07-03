@@ -380,6 +380,9 @@ Usually, it's just enough to clear the cache between HTTP requests in the app. T
 
 ```ruby
 use BatchLoader::Middleware
+
+# For Rails projects, add the following line in config/application.rb
+# config.middleware.use BatchLoader::Middleware
 ```
 
 To drop the cache manually you can run:
