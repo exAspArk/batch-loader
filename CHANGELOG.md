@@ -8,14 +8,18 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.0...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.1...HEAD)
 
 * WIP
+
+#### [v2.0.1](https://github.com/exAspArk/batch-loader/compare/v2.0.0...v2.0.1) - 2021-02-18
+
+* `Fixed`: Compatibility with GraphQL and Ruby 3. [#71](https://github.com/exAspArk/batch-loader/pull/71)
+* `Changed`: GraphQL tests. [03d5153](https://github.com/exAspArk/batch-loader/commit/03d51537bc4033fd3aab42db3eee3e9e1cb365fa)
 
 #### [v2.0.0](https://github.com/exAspArk/batch-loader/compare/v1.5.0...v2.0.0) - 2021-02-18
 
 * `Removed`: Support for GraphQL version <= 1.7. [#75](https://github.com/exAspArk/batch-loader/pull/75)
-* `Fixed`: Compatibility with Ruby 3. [#71](https://github.com/exAspArk/batch-loader/pull/71)
 
 #### [v1.5.0](https://github.com/exAspArk/batch-loader/compare/v1.4.1...v1.5.0) - 2020-04-20
 

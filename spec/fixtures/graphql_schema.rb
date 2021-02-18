@@ -7,13 +7,13 @@ class PostType < GraphQL::Schema::Object
   field :user_old, UserType, null: false
 
   def user
-    BatchLoader::GraphQL.for(object.user_id).batch do |user_ids, loader|
+    BatchLoader::GraphQL.for(object.user_id).batch(default_value: nil) do |user_ids, loader|
       User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end
 
   def user_old
-    BatchLoader.for(object.user_id).batch do |user_ids, loader|
+    BatchLoader.for(object.user_id).batch(default_value: nil) do |user_ids, loader|
       User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
   end
