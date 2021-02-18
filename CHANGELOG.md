@@ -12,12 +12,12 @@ that you can set version constraints properly.
 
 * WIP
 
-#### [v2.0.0](https://github.com/exAspArk/batch-loader/compare/v1.5.0...v2.0.0)
+#### [v2.0.0](https://github.com/exAspArk/batch-loader/compare/v1.5.0...v2.0.0) - 2021-02-18
 
 * `Removed`: Support for GraphQL version <= 1.7. [#75](https://github.com/exAspArk/batch-loader/pull/75)
 * `Fixed`: Compatibility with Ruby 3. [#71](https://github.com/exAspArk/batch-loader/pull/71)
 
-#### [v1.5.0](https://github.com/exAspArk/batch-loader/compare/v1.4.1...v1.5.0)
+#### [v1.5.0](https://github.com/exAspArk/batch-loader/compare/v1.4.1...v1.5.0) - 2020-04-20
 
 * `Added`: Support for GraphQL Interpreter. [#62](https://github.com/exAspArk/batch-loader/pull/62)
 * `Deprecated`: `BatchLoader.for` in GraphQL. [#62](https://github.com/exAspArk/batch-loader/pull/62)
@@ -46,40 +46,40 @@ def lazy_user
 end
 ```
 
-#### [v1.4.1](https://github.com/exAspArk/batch-loader/compare/v1.4.0...v1.4.1)
+#### [v1.4.1](https://github.com/exAspArk/batch-loader/compare/v1.4.0...v1.4.1) - 2019-05-24
 
 * `Fixes`: Does not allow mutating and corrupting a list of items in a `batch` block. [#46](https://github.com/exAspArk/batch-loader/pull/46)
 
-#### [v1.4.0](https://github.com/exAspArk/batch-loader/compare/v1.3.0...v1.4.0)
+#### [v1.4.0](https://github.com/exAspArk/batch-loader/compare/v1.3.0...v1.4.0) - 2019-04-29
 
 * `Added`: new `replace_methods` argument to `BatchLoader#batch` to allow control over `define_method` calls. [#45](https://github.com/exAspArk/batch-loader/pull/45)
 
-#### [v1.3.0](https://github.com/exAspArk/batch-loader/compare/v1.2.2...v1.3.0)
+#### [v1.3.0](https://github.com/exAspArk/batch-loader/compare/v1.2.2...v1.3.0) - 2019-02-01
 
 * `Added`: `BatchLoader::GraphQL.for` to make it compatible with `graphql` gem versions `>= 1.8.7`. [#30](https://github.com/exAspArk/batch-loader/issues/30)
 
-#### [v1.2.2](https://github.com/exAspArk/batch-loader/compare/v1.2.1...v1.2.2)
+#### [v1.2.2](https://github.com/exAspArk/batch-loader/compare/v1.2.1...v1.2.2) - 2018-12-03
 
 * `Fixed`: Identify item by `key` object instead of `key` string representation. [#27](https://github.com/exAspArk/batch-loader/pull/27)
 
-#### [v1.2.1](https://github.com/exAspArk/batch-loader/compare/v1.2.0...v1.2.1)
+#### [v1.2.1](https://github.com/exAspArk/batch-loader/compare/v1.2.0...v1.2.1) - 2017-12-16
 
 * `Fixed`: Do not depend on `method_missing` for `respond_to?`. [#14](https://github.com/exAspArk/batch-loader/pull/14)
 
-#### [v1.2.0](https://github.com/exAspArk/batch-loader/compare/v1.1.1...v1.2.0)
+#### [v1.2.0](https://github.com/exAspArk/batch-loader/compare/v1.1.1...v1.2.0) - 2017-11-16
 
 * `Added`: `key` argument for the `BatchLoader#batch` method. [#12](https://github.com/exAspArk/batch-loader/pull/12)
 
-#### [v1.1.1](https://github.com/exAspArk/batch-loader/compare/v1.1.0...v1.1.1)
+#### [v1.1.1](https://github.com/exAspArk/batch-loader/compare/v1.1.0...v1.1.1) - 2017-11-06
 
 * `Fixed`: `loader`, made it thread-safe again. [#10](https://github.com/exAspArk/batch-loader/pull/10)
 
-#### [v1.1.0](https://github.com/exAspArk/batch-loader/compare/v1.0.4...v1.1.0)
+#### [v1.1.0](https://github.com/exAspArk/batch-loader/compare/v1.0.4...v1.1.0) - 2017-11-02
 
 * `Added`: `default_value` override option. [#8](https://github.com/exAspArk/batch-loader/pull/8)
 * `Added`: `loader.call {}` block syntax, for memoizing repeat calls to the same item. [#8](https://github.com/exAspArk/batch-loader/pull/8)
 
-#### [v1.0.4](https://github.com/exAspArk/batch-loader/compare/v1.0.3...v1.0.4)
+#### [v1.0.4](https://github.com/exAspArk/batch-loader/compare/v1.0.3...v1.0.4) - 2017-10-12
 
 * `Fixed`: Fix arity bug in `respond_to?` [#3](https://github.com/exAspArk/batch-loader/pull/3)
 
