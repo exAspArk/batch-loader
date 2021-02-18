@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "graphql", "~> 1.6"
-  spec.add_development_dependency "pry-byebug", "~> 3.4"
+  spec.add_development_dependency "pry", "~> 0.14"
   spec.add_development_dependency "benchmark-ips", "~> 2.7"
   spec.add_development_dependency "ruby-prof", "~> 0.16"
 end

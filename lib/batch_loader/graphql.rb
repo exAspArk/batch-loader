@@ -54,8 +54,8 @@ class BatchLoader
       @batch_loader = BatchLoader.for(item)
     end
 
-    def batch(*args, **kwargs, &block)
-      @batch_loader.batch(*args, **kwargs, &block)
+    def batch(*kwargs, &block)
+      @batch_loader.batch(*kwargs, &block)
       self
     end
 
