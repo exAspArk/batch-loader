@@ -11,3 +11,4 @@
 # rspec failure tracking
 .rspec_status
 .ruby-version
+.tool-versions
