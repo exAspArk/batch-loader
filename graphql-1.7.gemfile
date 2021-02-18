@@ -1,7 +1,0 @@
-source "https://rubygems.org"
-
-gem 'coveralls'
-
-gem "graphql", "~> 1.7.0"
-
-gemspec

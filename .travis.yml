@@ -10,5 +10,4 @@ rvm:
 env:
   - CI=true
 gemfile:
-  - graphql-1.7.gemfile
   - graphql-latest.gemfile
