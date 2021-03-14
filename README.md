@@ -256,7 +256,7 @@ module Types
     field :user, UserType, null: false
 
     def user
-      post.user # N+1 queries
+      object.user # N+1 queries
     end
   end
 end
@@ -295,7 +295,7 @@ module Types
     field :user, UserType, null: false
 
     def user
-      BatchLoader::GraphQL.for(post.user_id).batch do |user_ids, loader|
+      BatchLoader::GraphQL.for(object.user_id).batch do |user_ids, loader|
         User.where(id: user_ids).each { |user| loader.call(user.id, user) }
       end
     end
