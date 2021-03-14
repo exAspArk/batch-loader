@@ -1,5 +1,8 @@
 language: ruby
 before_install: gem install bundler -v 2.0.1
+arch:
+  - amd64
+  - ppc64le
 rvm:
   - 2.3.8
   - 2.4.10
