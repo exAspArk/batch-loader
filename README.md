@@ -380,6 +380,9 @@ Usually, it's just enough to clear the cache between HTTP requests in the app. T
 
 ```ruby
 use BatchLoader::Middleware
+
+# Sidekiq middlware is not following typical rack middleware interface
+Sidekiq.configure_server { |c| c.server_middleware { |chain| chain.add BatchLoader::SidekiqMiddleware } }
 ```
 
 To drop the cache manually you can run:

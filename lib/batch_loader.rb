@@ -5,6 +5,7 @@ require "set"
 require_relative "./batch_loader/version"
 require_relative "./batch_loader/executor_proxy"
 require_relative "./batch_loader/middleware"
+require_relative "./batch_loader/sidekiq_middleware"
 require_relative "./batch_loader/graphql"
 
 class BatchLoader
