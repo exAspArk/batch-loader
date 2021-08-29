@@ -69,8 +69,8 @@ class BatchLoader
     @cache ? @loaded_value : result
   end
 
-  def method_missing(method_name, *args, &block)
-    __sync!.public_send(method_name, *args, &block)
+  def method_missing(method_name, *args, **kwargs, &block)
+    __sync!.public_send(method_name, *args, **kwargs, &block)
   end
 
   def __sync!
@@ -120,8 +120,8 @@ class BatchLoader
   def __replace_with!(value)
     __singleton_class.class_eval do
       (value.methods - LEFT_INSTANCE_METHODS).each do |method_name|
-        define_method(method_name) do |*args, &block|
-          value.public_send(method_name, *args, &block)
+        define_method(method_name) do |*args, **kwargs, &block|
+          value.public_send(method_name, *args, **kwargs, &block)
         end
       end
     end
