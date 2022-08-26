@@ -27,5 +27,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "graphql", "~> 1.8"
   spec.add_development_dependency "pry", "~> 0.14"
   spec.add_development_dependency "benchmark-ips", "~> 2.7"
-  spec.add_development_dependency "ruby-prof", "~> 0.16"
 end
