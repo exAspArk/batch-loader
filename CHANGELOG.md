@@ -8,9 +8,13 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.1...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.2...HEAD)
 
 * WIP
+
+#### [v2.0.2](https://github.com/exAspArk/batch-loader/compare/v2.0.1...v2.0.2) - 2023-11-22
+
+* `Fixed`: Compatibility with Ruby 3 kwargs. [#80](https://github.com/exAspArk/batch-loader/pull/80)
 
 #### [v2.0.1](https://github.com/exAspArk/batch-loader/compare/v2.0.0...v2.0.1) - 2021-02-18
 
