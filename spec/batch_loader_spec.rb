@@ -200,6 +200,17 @@ RSpec.describe BatchLoader do
     end
   end
 
+  context 'instance' do
+    it 'works for methods with kwargs in Ruby 3' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      batch_loader = post.user_lazy
+
+      expect(batch_loader.method_with_arg_kwarg_and_block(1, b: 2) { |a, b| a + b }).to eq(3)
+    end
+  end
+
   describe '#inspect' do
     it 'returns BatchLoader without syncing and delegates #inspect after' do
       user = User.save(id: 1)
