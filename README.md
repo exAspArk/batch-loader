@@ -338,7 +338,7 @@ class Types::PreloadableField < Types::BaseField
     return super unless @preloads
 
     BatchLoader::GraphQL.for(type).batch(key: self) do |records, loader|
-      ActiveRecord::Associations::Preloader.new.preload(records.map(&:object), @preloads)
+      ActiveRecord::Associations::Preloader.new(records: records.map(&:object), associations: @preloads).call
       records.each { |r| loader.call(r, super(r, args, ctx)) }
     end
   end
