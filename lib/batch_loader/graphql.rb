@@ -59,6 +59,11 @@ class BatchLoader
       self
     end
 
+    def then(&block)
+      @batch_loader.then(&block)
+      self
+    end
+
     def sync
       @batch_loader.__sync
     end
