@@ -17,14 +17,16 @@ RSpec.describe 'GraphQL integration' do
   end
 
   def test(schema)
-    user1 = User.save(id: "1")
-    user2 = User.save(id: "2")
+    user1 = User.save(id: "1", name: "John")
+    user2 = User.save(id: "2", name: "Jane")
     Post.save(user_id: user1.id)
     Post.save(user_id: user2.id)
     query = <<~QUERY
       {
         posts {
           user { id }
+          userName
+          userId
           userOld { id }
         }
       }
@@ -36,8 +38,8 @@ RSpec.describe 'GraphQL integration' do
 
     expect(result['data']).to eq({
       'posts' => [
-        {'user' => {'id' => "1"}, 'userOld' => {'id' => "1"}},
-        {'user' => {'id' => "2"}, 'userOld' => {'id' => "2"}}
+        {'user' => {'id' => "1"}, 'userOld' => {'id' => "1"}, 'userId' => "1", 'userName' => "John"},
+        {'user' => {'id' => "2"}, 'userOld' => {'id' => "2"}, 'userId' => "2", 'userName' => "Jane"}
       ]
     })
   end
