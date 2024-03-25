@@ -2,11 +2,20 @@
 
 class BatchLoader
   class GraphQL
+    module Trace
+      def execute_field(**_data)
+        result = yield
+        result.respond_to?(:__sync) ? BatchLoader::GraphQL.wrap_with_warning(result) : result
+      end
+    end
+
     def self.use(schema_definition)
       schema_definition.lazy_resolve(BatchLoader::GraphQL, :sync)
 
       # in cases when BatchLoader is being used instead of BatchLoader::GraphQL
-      if schema_definition.respond_to?(:interpreter?) && schema_definition.interpreter?
+      if schema_definition.respond_to?(:trace_with)
+        schema_definition.trace_with(Trace)
+      elsif schema_definition.respond_to?(:interpreter?) && schema_definition.interpreter?
         schema_definition.tracer(self)
       else
         schema_definition.instrument(:field, self)
