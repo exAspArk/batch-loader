@@ -8,9 +8,13 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.2...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.3...HEAD)
 
 * WIP
+
+#### [v2.0.3](https://github.com/exAspArk/batch-loader/compare/v2.0.2...v2.0.3) - 2024-03-25
+
+* `Fixed`: `Schema.tracer(...)` GraphQL deprecation warning by making it compatible with `.trace_with(...)`. [#91](https://github.com/exAspArk/batch-loader/pull/91)
 
 #### [v2.0.2](https://github.com/exAspArk/batch-loader/compare/v2.0.1...v2.0.2) - 2023-11-22
 
