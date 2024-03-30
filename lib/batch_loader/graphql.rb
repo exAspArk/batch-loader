@@ -68,8 +68,18 @@ class BatchLoader
       self
     end
 
+    def lazy_eval
+      @batch_loader.lazy_eval
+      self
+    end
+
     def sync
       @batch_loader.__sync
+    end
+
+    def method_missing(method_name, *args, **kwargs, &block)
+      super if !@batch_loader.__accepting_lazy_chain?
+      @batch_loader.public_send(method_name, *args, **kwargs, &block)
     end
   end
 end
