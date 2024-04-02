@@ -4,7 +4,7 @@ class BatchLoader
   class GraphQL
     module Trace
       def execute_field(**_data)
-        result = yield
+        result = super
         result.respond_to?(:__sync) ? BatchLoader::GraphQL.wrap_with_warning(result) : result
       end
     end
