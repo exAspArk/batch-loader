@@ -8,9 +8,13 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.3...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.4...HEAD)
 
 * WIP
+
+#### [v2.0.4](https://github.com/exAspArk/batch-loader/compare/v2.0.3...v2.0.4) - 2024-04-02
+
+* `Fixed`: Chaining `#execute_field` trace calls. [#93](https://github.com/exAspArk/batch-loader/pull/93)
 
 #### [v2.0.3](https://github.com/exAspArk/batch-loader/compare/v2.0.2...v2.0.3) - 2024-03-25
 
