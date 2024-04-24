@@ -45,7 +45,6 @@ class BatchLoader
       warn "DEPRECATION WARNING: using BatchLoader.for in GraphQL is deprecated. Use BatchLoader::GraphQL.for instead or return BatchLoader::GraphQL.wrap from your resolver."
       wrap(batch_loader)
     end
-    private_class_method :wrap_with_warning
 
     def self.wrap(batch_loader)
       BatchLoader::GraphQL.new.tap do |graphql|
