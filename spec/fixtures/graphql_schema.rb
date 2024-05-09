@@ -4,12 +4,22 @@ end
 
 class PostType < GraphQL::Schema::Object
   field :user, UserType, null: false
+  field :user_id, String, null: false
+  field :user_name, String, null: false
   field :user_old, UserType, null: false
 
   def user
     BatchLoader::GraphQL.for(object.user_id).batch(default_value: nil) do |user_ids, loader|
       User.where(id: user_ids).each { |user| loader.call(user.id, user) }
     end
+  end
+
+  def user_id
+    user.lazy_eval.id
+  end
+
+  def user_name
+    user.lazy_eval.name
   end
 
   def user_old

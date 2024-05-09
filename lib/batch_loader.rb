@@ -8,8 +8,8 @@ require_relative "./batch_loader/middleware"
 require_relative "./batch_loader/graphql"
 
 class BatchLoader
-  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect].freeze
-  REPLACABLE_INSTANCE_METHODS = %i[batch inspect].freeze
+  IMPLEMENTED_INSTANCE_METHODS = %i[object_id __id__ __send__ singleton_method_added __sync respond_to? batch inspect lazy_eval __accepting_lazy_chain?].freeze
+  REPLACABLE_INSTANCE_METHODS = %i[batch inspect lazy_eval].freeze
   LEFT_INSTANCE_METHODS = (IMPLEMENTED_INSTANCE_METHODS - REPLACABLE_INSTANCE_METHODS).freeze
 
   NoBatchError = Class.new(StandardError)
@@ -37,6 +37,15 @@ class BatchLoader
     self
   end
 
+  def lazy_eval
+    @accepting_lazy_chain = true
+    @lazy_chain = []
+
+    __singleton_class.class_eval { undef_method(:lazy_eval) }
+
+    self
+  end
+
   def respond_to?(method_name, include_private = false)
     return true if LEFT_INSTANCE_METHODS.include?(method_name)
 
@@ -49,9 +58,13 @@ class BatchLoader
 
   def __sync
     return @loaded_value if @synced
+    @accepting_lazy_chain = false
 
     __ensure_batched
     @loaded_value = __executor_proxy.loaded_value(item: @item)
+    (@lazy_chain || []).each do |method_name, args, kwargs, block|
+      @loaded_value = @loaded_value.public_send(method_name, *args, **kwargs, &block)
+    end
 
     if @cache
       @synced = true
@@ -62,6 +75,10 @@ class BatchLoader
     @loaded_value
   end
 
+  def __accepting_lazy_chain?
+    @accepting_lazy_chain
+  end
+
   private
 
   def __loaded_value
@@ -70,7 +87,16 @@ class BatchLoader
   end
 
   def method_missing(method_name, *args, **kwargs, &block)
-    __sync!.public_send(method_name, *args, **kwargs, &block)
+    return __sync!.public_send(method_name, *args, **kwargs, &block) if !__accepting_lazy_chain?
+
+    return __sync! if method_name == :force
+
+    if method_name == :eager
+      @accepting_lazy_chain = false
+    else
+      @lazy_chain << [method_name, args, kwargs, block]
+    end
+    self
   end
 
   def __sync!

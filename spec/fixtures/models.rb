@@ -37,9 +37,9 @@ end
 
 class User
   class << self
-    def save(id:)
+    def save(id:, name: nil)
       ensure_init_store
-      @store[self][id] = new(id: id)
+      @store[self][id] = new(id: id, name: name)
     end
 
     def where(id:)
@@ -59,14 +59,19 @@ class User
     end
   end
 
-  attr_reader :id
+  attr_reader :id, :name
 
-  def initialize(id:)
+  def initialize(id:, name: nil)
     @id = id
+    @name = name
   end
 
   def batch
     "Batch from User"
+  end
+
+  def lazy_eval
+    "Lazy Eval from User"
   end
 
   def hash
