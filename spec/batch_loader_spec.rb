@@ -321,4 +321,12 @@ RSpec.describe BatchLoader do
       expect { result.to_s }.to raise_error("Oops")
     end
   end
+
+  describe '#tap' do
+    it 'returns BatchLoader without syncing' do
+      result = BatchLoader.for(1).batch { |_ids, _loader| raise "Oops" }
+
+      expect { result.tap {} }.not_to raise_error("Oops")
+    end
+  end
 end
