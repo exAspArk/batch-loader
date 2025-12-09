@@ -8,9 +8,13 @@ one of the following labels: `Added`, `Changed`, `Deprecated`,
 to manage the versions of this gem so
 that you can set version constraints properly.
 
-#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.5...HEAD)
+#### [Unreleased](https://github.com/exAspArk/batch-loader/compare/v2.0.6...HEAD)
 
 * WIP
+
+#### [v2.0.6](https://github.com/exAspArk/batch-loader/compare/v2.0.5...v2.0.6) - 2025-12-09
+
+* `Fixed`: Double wrapping of `BatchLoader::GraphQL`. [#95](https://github.com/exAspArk/batch-loader/pull/95)
 
 #### [v2.0.5](https://github.com/exAspArk/batch-loader/compare/v2.0.4...v2.0.5) - 2024-04-24
 
