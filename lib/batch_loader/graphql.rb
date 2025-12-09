@@ -47,8 +47,13 @@ class BatchLoader
     end
 
     def self.wrap(batch_loader)
-      BatchLoader::GraphQL.new.tap do |graphql|
-        graphql.batch_loader = batch_loader
+      case batch_loader
+      when BatchLoader::GraphQL
+        batch_loader
+      else
+        BatchLoader::GraphQL.new.tap do |graphql|
+          graphql.batch_loader = batch_loader
+        end
       end
     end
 
