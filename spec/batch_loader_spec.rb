@@ -220,7 +220,7 @@ RSpec.describe BatchLoader do
 
       expect(batch_loader.inspect).to match(/#<BatchLoader:0x\w+>/)
       expect(batch_loader.to_s).to match(/#<User:0x\w+>/)
-      expect(batch_loader.inspect).to match(/#<User:0x\w+ @id=1>/)
+      expect(batch_loader.inspect).to match(/#<User:0x\w+ @id=1, @name=nil>/)
     end
   end
 
@@ -319,6 +319,28 @@ RSpec.describe BatchLoader do
       # require 'pry'; binding.pry
       expect { result.to_s }.to raise_error("Oops")
       expect { result.to_s }.to raise_error("Oops")
+    end
+  end
+
+  describe "#lazy_eval" do
+    it 'allows modifying the end result without adding more loaders' do
+      user1 = User.save(id: 1, name: "John")
+      user2 = User.save(id: 2, name: "Jane")
+      post1 = Post.new(user_id: user1.id)
+      post2 = Post.new(user_id: user2.id)
+      result = { user1: post1.user_lazy.lazy_eval.name.eager, user2: post2.user_lazy.lazy_eval.id.eager }
+
+      expect(User).to receive(:where).with(id: [1, 2]).once.and_call_original
+
+      expect(result).to eq(user1: "John", user2: 2)
+    end
+
+    it 'delegates the second then call to the loaded value' do
+      user = User.save(id: 1)
+      post = Post.new(user_id: user.id)
+
+      user_lazy_instance = post.user_lazy.lazy_eval
+      expect(user_lazy_instance.lazy_eval.eager).to eq("Lazy Eval from User")
     end
   end
 end

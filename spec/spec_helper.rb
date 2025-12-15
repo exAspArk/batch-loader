@@ -1,4 +1,5 @@
 require "bundler/setup"
+require 'pry'
 
 if ENV['CI']
   require 'coveralls'
